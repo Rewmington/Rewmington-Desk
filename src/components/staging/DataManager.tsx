@@ -63,12 +63,12 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
     <>
       {/* 遮罩层 */}
       <div
-        className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* 侧边抽屉 */}
-      <div className="fixed top-0 right-0 z-50 h-full w-[400px] max-w-[90vw] bg-white/40 glass-backdrop border-l border-white/30 shadow-xl shadow-black/5 animate-slide-in-right flex flex-col">
+      <div className="fixed top-0 right-0 z-[60] h-full w-[400px] max-w-[90vw] bg-white/40 glass-backdrop border-l border-white/30 shadow-xl shadow-black/5 animate-slide-in-right flex flex-col">
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-6 border-b border-white/20">
           <h2 className="text-lg font-bold text-gray-800">📦 暂存数据管理</h2>

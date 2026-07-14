@@ -75,12 +75,12 @@ export default function AddDialog({
     <>
       {/* 遮罩层 */}
       <div
-        className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm animate-fade-in-up"
+        className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm animate-fade-in-up"
         onClick={handleClose}
       />
 
       {/* 对话框 */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
         <div
           className="relative w-full max-w-[560px] bg-white/40 glass-backdrop border border-white/30 rounded-[24px] shadow-xl shadow-black/5 p-6 pointer-events-auto animate-fade-in-up"
           onClick={(e) => e.stopPropagation()}
