@@ -103,4 +103,12 @@ export const friends: Friend[] = [
   },
 ];
 
-export const photos: Photo[] = [];
+export const photos: Photo[] = [
+  {
+    id: "1",
+    src: "/images/posts/穹大头照.jpg",
+    caption: "穹大头照",
+    date: "2026-07-14",
+    location: "",
+  },
+];
