@@ -12,7 +12,7 @@ export function useSpotlight(): SpotlightValues {
   const mouseX = useMotionValue(50);
   const mouseY = useMotionValue(50);
 
-  const spotlightStyle = useMotionTemplate`radial-gradient(300px circle at ${mouseX}% ${mouseY}%, rgba(255,255,255,0.15), transparent 60%)`;
+  const spotlightStyle = useMotionTemplate`radial-gradient(300px circle at ${mouseX}% ${mouseY}%, rgba(255,200,220,0.2), transparent 60%)`;
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {

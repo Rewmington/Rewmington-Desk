@@ -2,71 +2,12 @@ import SearchBar from "@/components/SearchBar";
 import ProfileCard from "@/components/ProfileCard";
 import MusicPlayer from "@/components/MusicPlayer";
 import StatusBar from "@/components/StatusBar";
+import ArticleCard from "@/components/ArticleCard";
 import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { articles } from "@/lib/constants";
-import GlassCard from "@/components/GlassCard";
-import type { Article } from "@/types";
-
-function ArticleCard({ article }: { article: Article }) {
-  const isImage = article.variant === "image";
-
-  return (
-    <GlassCard className={`h-full ${isImage ? "min-h-[280px]" : "min-h-[200px]"}`}>
-      <div
-        className={`relative h-full flex flex-col justify-end p-6 ${
-          isImage ? "min-h-[280px]" : "min-h-[200px]"
-        }`}
-      >
-        {/* 渐变背景 */}
-        <div
-          className={`absolute inset-0 rounded-3xl ${
-            isImage
-              ? "bg-gradient-to-br from-purple-600/60 to-pink-600/60"
-              : "bg-gradient-to-br from-purple-500/30 to-pink-500/30"
-          }`}
-        />
-
-        {/* 渐变蒙层 */}
-        <div
-          className={`absolute inset-0 rounded-3xl ${
-            isImage
-              ? "bg-gradient-to-t from-black/70 via-black/20 to-transparent"
-              : "bg-gradient-to-br from-purple-500/20 to-pink-500/20"
-          }`}
-        />
-
-        {/* 内容 */}
-        <div className="relative z-10">
-          {/* 标签 */}
-          <div className="flex gap-2 mb-3">
-            {article.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 text-xs rounded-full bg-white/20 text-white/80 backdrop-blur-sm"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-
-          {/* 标题 */}
-          <h3 className="text-white font-bold text-lg md:text-xl leading-tight mb-2 drop-shadow-lg">
-            {article.title}
-          </h3>
-
-          {/* 描述 */}
-          <p className="text-white/60 text-sm line-clamp-2">{article.description}</p>
-
-          {/* 日期 */}
-          <div className="text-white/40 text-xs mt-3">{article.date}</div>
-        </div>
-      </div>
-    </GlassCard>
-  );
-}
 
 export default function Home() {
   return (

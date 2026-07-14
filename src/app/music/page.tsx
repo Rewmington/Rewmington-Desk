@@ -13,10 +13,10 @@ export default function MusicPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
               🎵 音乐
             </h1>
-            <p className="text-white/60 text-sm md:text-base">
+            <p className="text-gray-600 text-sm md:text-base">
               我喜欢的音乐
             </p>
           </div>

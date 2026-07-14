@@ -28,10 +28,10 @@ export default function ProjectsPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
               💻 项目
             </h1>
-            <p className="text-white/60 text-sm md:text-base">
+            <p className="text-gray-600 text-sm md:text-base">
               我的开源项目与作品
             </p>
           </div>
@@ -43,17 +43,17 @@ export default function ProjectsPage() {
             <StaggerItem key={project.name}>
               <GlassCard className="p-6 h-full">
                 <div className="flex flex-col h-full">
-                  <h3 className="text-white font-bold text-lg mb-2">
+                  <h3 className="text-gray-800 font-bold text-lg mb-2">
                     {project.name}
                   </h3>
-                  <p className="text-white/60 text-sm flex-1 mb-4">
+                  <p className="text-gray-600 text-sm flex-1 mb-4">
                     {project.description}
                   </p>
                   <div className="flex gap-2 flex-wrap">
                     {project.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 text-xs rounded-full bg-white/15 text-white/70 backdrop-blur-sm"
+                        className="px-2 py-0.5 text-xs rounded-full bg-white/30 text-gray-700 backdrop-blur-sm"
                       >
                         {tag}
                       </span>
@@ -64,7 +64,7 @@ export default function ProjectsPage() {
                       href={project.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-1 text-white/50 hover:text-white/80 text-xs transition-colors"
+                      className="mt-4 inline-flex items-center gap-1 text-gray-500 hover:text-gray-800 text-xs transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

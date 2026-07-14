@@ -9,12 +9,13 @@ interface GlassCardProps {
   children: ReactNode;
   className?: string;
   enableTilt?: boolean;
+  variant?: "light" | "transparent";
 }
 
 function SpotlightOverlay({ spotlightStyle }: { spotlightStyle: MotionValue<string> }) {
   return (
     <motion.div
-      className="absolute inset-0 pointer-events-none z-20 rounded-3xl"
+      className="absolute inset-0 pointer-events-none z-20 rounded-[24px]"
       style={{ background: spotlightStyle }}
     />
   );
@@ -24,6 +25,7 @@ export default function GlassCard({
   children,
   className = "",
   enableTilt = true,
+  variant = "light",
 }: GlassCardProps) {
   const { rotateX, rotateY, handleMouseMove: tiltMouseMove, handleMouseLeave } = useTiltEffect(10);
   const { spotlightStyle, handleMouseMove: spotlightMouseMove } = useSpotlight();
@@ -33,10 +35,14 @@ export default function GlassCard({
     spotlightMouseMove(e);
   };
 
+  const baseClasses = variant === "transparent"
+    ? "relative overflow-hidden bg-white/10 glass-backdrop border border-white/20 rounded-[24px] shadow-lg shadow-black/5"
+    : "relative overflow-hidden bg-white/40 glass-backdrop border border-white/30 rounded-[24px] shadow-lg shadow-black/5";
+
   if (!enableTilt) {
     return (
       <div
-        className={`relative overflow-hidden bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-xl ${className}`}
+        className={`${baseClasses} ${className}`}
         onMouseMove={handleMouseMove}
       >
         <SpotlightOverlay spotlightStyle={spotlightStyle} />
@@ -47,7 +53,7 @@ export default function GlassCard({
 
   return (
     <motion.div
-      className={`relative overflow-hidden bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-xl ${className}`}
+      className={`${baseClasses} ${className}`}
       style={{
         rotateX,
         rotateY,

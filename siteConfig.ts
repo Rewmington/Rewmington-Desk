@@ -5,6 +5,7 @@ const siteConfig: SiteConfig = {
   bio: "一个喜欢折腾代码和二次元的人 ✨",
   avatarUrl: "/avatar.jpg",
   buildDate: "2025-07-14T00:00:00.000Z",
+  filing: "京ICP备XXXXXXXX号",
   socials: [
     {
       name: "GitHub",

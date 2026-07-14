@@ -25,12 +25,12 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-lg border-b border-white/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/30 glass-backdrop border-b border-white/30">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-lg font-bold text-white drop-shadow-lg">
+            <span className="text-lg font-bold text-gray-800">
               🌸 Rewmington
             </span>
           </Link>
@@ -43,14 +43,14 @@ export default function Navbar() {
                 href={item.href}
                 className={`relative px-3 py-1.5 rounded-full text-sm transition-colors ${
                   isActive(item.href)
-                    ? "text-white font-medium"
-                    : "text-white/60 hover:text-white/90"
+                    ? "text-gray-800 font-medium"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {isActive(item.href) && (
                   <motion.div
                     layoutId="navbar-active"
-                    className="absolute inset-0 bg-white/20 rounded-full"
+                    className="absolute inset-0 bg-white/40 rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -61,7 +61,7 @@ export default function Navbar() {
 
           {/* 移动端汉堡按钮 */}
           <button
-            className="md:hidden w-10 h-10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            className="md:hidden w-10 h-10 flex items-center justify-center text-gray-700 hover:text-gray-900 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="菜单"
           >
@@ -84,7 +84,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-black/40 backdrop-blur-lg border-b border-white/20"
+            className="md:hidden overflow-hidden bg-white/30 glass-backdrop border-b border-white/30"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
               {navItems.map((item) => (
@@ -94,8 +94,8 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition-colors ${
                     isActive(item.href)
-                      ? "bg-white/20 text-white font-medium"
-                      : "text-white/60 hover:text-white/90 hover:bg-white/10"
+                      ? "bg-white/40 text-gray-800 font-medium"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-white/20"
                   }`}
                 >
                   <svg

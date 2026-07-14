@@ -13,10 +13,10 @@ export default function PhotosPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
               📷 照片墙
             </h1>
-            <p className="text-white/60 text-sm md:text-base">
+            <p className="text-gray-600 text-sm md:text-base">
               用镜头记录生活瞬间
             </p>
           </div>
@@ -26,10 +26,10 @@ export default function PhotosPage() {
         <StaggerItem>
           <GlassCard className="p-12 md:p-20 text-center">
             <div className="text-6xl mb-4">📸</div>
-            <h3 className="text-white/80 text-lg font-medium mb-2">
+            <h3 className="text-gray-700 text-lg font-medium mb-2">
               照片墙即将上线
             </h3>
-            <p className="text-white/50 text-sm">
+            <p className="text-gray-500 text-sm">
               正在整理照片，敬请期待...
             </p>
           </GlassCard>
