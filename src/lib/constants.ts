@@ -1,68 +1,8 @@
 import type { Article, MusicTrack, Project, Friend, Photo } from "@/types";
 
-export const articles: Article[] = [
-  {
-    id: "1",
-    title: "用 Next.js 构建个人博客的完整指南",
-    description:
-      "从零开始搭建一个高颜值的静态博客，涵盖 App Router、Tailwind CSS 和 GitHub Pages 部署。",
-    cover: "/images/posts/post-1.jpg",
-    date: "2025-07-10",
-    tags: ["Next.js", "React", "教程"],
-    variant: "image",
-  },
-  {
-    id: "2",
-    title: "Tailwind CSS 4 新特性速览",
-    description: "探索 Tailwind CSS 4 带来的全新体验，包括 CSS-first 配置和更快的构建速度。",
-    cover: "/images/posts/post-2.jpg",
-    date: "2025-07-05",
-    tags: ["CSS", "Tailwind"],
-    variant: "text-overlay",
-  },
-  {
-    id: "3",
-    title: "Framer Motion 动画实战",
-    description: "3D 倾斜、聚光灯、入场动画……用 Framer Motion 打造丝滑交互体验。",
-    cover: "/images/posts/post-3.jpg",
-    date: "2025-06-28",
-    tags: ["动画", "React"],
-    variant: "image",
-  },
-  {
-    id: "4",
-    title: "毛玻璃拟态设计趋势",
-    description: "Glassmorphism 的设计原则与前端实现技巧。",
-    cover: "/images/posts/post-4.jpg",
-    date: "2025-06-20",
-    tags: ["设计", "CSS"],
-    variant: "text-overlay",
-  },
-];
+export const articles: Article[] = [];
 
-export const musicTracks: MusicTrack[] = [
-  {
-    id: "1",
-    title: "夜に駆ける",
-    artist: "YOASOBI",
-    cover: "/images/album-cover.jpg",
-    src: "",
-  },
-  {
-    id: "2",
-    title: "群青",
-    artist: "YOASOBI",
-    cover: "/images/album-cover.jpg",
-    src: "",
-  },
-  {
-    id: "3",
-    title: "怪物",
-    artist: "YOASOBI",
-    cover: "/images/album-cover.jpg",
-    src: "",
-  },
-];
+export const musicTracks: MusicTrack[] = [];
 
 export const techBadges = [
   {

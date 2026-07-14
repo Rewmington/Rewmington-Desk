@@ -1,6 +1,7 @@
 "use client";
 
 import ArticleCard from "@/components/ArticleCard";
+import GlassCard from "@/components/GlassCard";
 import {
   StaggerContainer,
   StaggerItem,
@@ -24,17 +25,30 @@ export default function ArticlesPage() {
           </div>
         </StaggerItem>
 
-        {/* 文章网格 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {articles.map((article, index) => (
-            <StaggerItem
-              key={article.id}
-              className={index === 0 ? "md:col-span-2" : ""}
-            >
-              <ArticleCard article={article} />
-            </StaggerItem>
-          ))}
-        </div>
+        {articles.length === 0 ? (
+          <StaggerItem>
+            <GlassCard className="p-12 md:p-20 text-center">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-gray-700 text-lg font-medium mb-2">
+                还没有文章
+              </h3>
+              <p className="text-gray-500 text-sm">
+                点击右下角 + 按钮添加第一篇文章
+              </p>
+            </GlassCard>
+          </StaggerItem>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {articles.map((article, index) => (
+              <StaggerItem
+                key={article.id}
+                className={index === 0 ? "md:col-span-2" : ""}
+              >
+                <ArticleCard article={article} />
+              </StaggerItem>
+            ))}
+          </div>
+        )}
       </StaggerContainer>
 
       <AddButton contentType="article" />

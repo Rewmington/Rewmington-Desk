@@ -12,6 +12,17 @@ export default function MusicPlayer() {
 
   const track = musicTracks[currentTrack];
 
+  // 无音乐数据时显示空状态
+  if (!track) {
+    return (
+      <GlassCard className="p-5 md:p-6">
+        <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+          🎵 暂无音乐，点击音乐页添加
+        </div>
+      </GlassCard>
+    );
+  }
+
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
