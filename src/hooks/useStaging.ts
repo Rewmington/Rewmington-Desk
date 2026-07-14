@@ -24,6 +24,23 @@ function writeItems(items: StagingItem[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
+// 将 data 中所有字符串值的反斜杠替换为正斜杠（Windows 路径兼容）
+function normalizePaths(data: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === "string") {
+      result[key] = value.replace(/\\/g, "/");
+    } else if (Array.isArray(value)) {
+      result[key] = value.map((v) =>
+        typeof v === "string" ? v.replace(/\\/g, "/") : v
+      );
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 export function useStaging() {
   const [items, setItems] = useState<StagingItem[]>([]);
 
@@ -41,7 +58,7 @@ export function useStaging() {
     const newItem: StagingItem = {
       id: generateId(),
       type,
-      data,
+      data: normalizePaths(data),
       stagedAt: new Date().toISOString(),
     };
     writeItems([...current, newItem]);
