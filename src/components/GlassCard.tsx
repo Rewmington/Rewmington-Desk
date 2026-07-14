@@ -36,7 +36,7 @@ export default function GlassCard({
   if (!enableTilt) {
     return (
       <div
-        className={`relative overflow-hidden bg-white/30 backdrop-blur-lg border border-white/50 rounded-3xl shadow-xl ${className}`}
+        className={`relative overflow-hidden bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-xl ${className}`}
         onMouseMove={handleMouseMove}
       >
         <SpotlightOverlay spotlightStyle={spotlightStyle} />
@@ -47,7 +47,7 @@ export default function GlassCard({
 
   return (
     <motion.div
-      className={`relative overflow-hidden bg-white/30 backdrop-blur-lg border border-white/50 rounded-3xl shadow-xl ${className}`}
+      className={`relative overflow-hidden bg-black/40 backdrop-blur-lg border border-white/20 rounded-3xl shadow-xl ${className}`}
       style={{
         rotateX,
         rotateY,
