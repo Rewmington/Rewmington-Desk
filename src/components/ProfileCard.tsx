@@ -9,9 +9,14 @@ export default function ProfileCard() {
       <div className="flex flex-col items-center text-center gap-4">
         {/* 头像 */}
         <div className="p-1 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500">
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-3xl md:text-4xl">
-            🌸
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={siteConfig.avatarUrl}
+            alt={siteConfig.authorName}
+            width={96}
+            height={96}
+            className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover"
+          />
         </div>
 
         {/* 昵称 */}

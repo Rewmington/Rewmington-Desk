@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SakuraBackground from "@/components/SakuraBackground";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +39,11 @@ export default function RootLayout({
         {/* 樱花飘落 */}
         <SakuraBackground />
 
+        {/* 导航栏 */}
+        <Navbar />
+
         {/* 内容 */}
-        <div className="relative z-20 flex-1">{children}</div>
+        <div className="relative z-20 flex-1 pt-14">{children}</div>
       </body>
     </html>
   );
