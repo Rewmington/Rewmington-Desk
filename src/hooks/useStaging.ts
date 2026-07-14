@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ContentType, StagingItem, ExportFile } from "@/types";
 
 const STORAGE_KEY = "myblog-staging-items";
@@ -27,12 +27,13 @@ function writeItems(items: StagingItem[]): void {
 export function useStaging() {
   const [items, setItems] = useState<StagingItem[]>([]);
 
-  const refresh = useCallback(() => {
+  // 挂载时从 localStorage 读取
+  useEffect(() => {
     setItems(readItems());
   }, []);
 
-  const getItems = useCallback((): StagingItem[] => {
-    return readItems();
+  const refresh = useCallback(() => {
+    setItems(readItems());
   }, []);
 
   const addItem = useCallback((type: ContentType, data: Record<string, unknown>): void => {
@@ -57,21 +58,6 @@ export function useStaging() {
     writeItems([]);
     refresh();
   }, [refresh]);
-
-  const getItemsByType = useCallback((): Record<ContentType, StagingItem[]> => {
-    const current = readItems();
-    const grouped: Record<ContentType, StagingItem[]> = {
-      article: [],
-      project: [],
-      friend: [],
-      music: [],
-      photo: [],
-    };
-    for (const item of current) {
-      grouped[item.type].push(item);
-    }
-    return grouped;
-  }, []);
 
   const exportToJSON = useCallback((): ExportFile => {
     const current = readItems();
@@ -101,11 +87,9 @@ export function useStaging() {
   return {
     items,
     refresh,
-    getItems,
     addItem,
     removeItem,
     clearAll,
-    getItemsByType,
     exportToJSON,
     downloadExport,
   };

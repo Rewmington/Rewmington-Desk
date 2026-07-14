@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useStaging } from "@/hooks/useStaging";
 import type { ContentType, StagingItem } from "@/types";
 
@@ -44,6 +45,11 @@ interface DataManagerProps {
 
 export default function DataManager({ isOpen, onClose }: DataManagerProps) {
   const { items, refresh, removeItem, clearAll, downloadExport } = useStaging();
+
+  // 每次打开时从 localStorage 刷新数据
+  useEffect(() => {
+    if (isOpen) refresh();
+  }, [isOpen, refresh]);
 
   if (!isOpen) return null;
 
