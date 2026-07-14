@@ -10,6 +10,7 @@ interface GlassCardProps {
   className?: string;
   enableTilt?: boolean;
   variant?: "light" | "transparent";
+  onClick?: () => void;
 }
 
 function SpotlightOverlay({ spotlightStyle }: { spotlightStyle: MotionValue<string> }) {
@@ -26,6 +27,7 @@ export default function GlassCard({
   className = "",
   enableTilt = true,
   variant = "light",
+  onClick,
 }: GlassCardProps) {
   const { rotateX, rotateY, handleMouseMove: tiltMouseMove, handleMouseLeave } = useTiltEffect(10);
   const { spotlightStyle, handleMouseMove: spotlightMouseMove } = useSpotlight();
@@ -44,6 +46,7 @@ export default function GlassCard({
       <div
         className={`${baseClasses} ${className}`}
         onMouseMove={handleMouseMove}
+        onClick={onClick}
       >
         <SpotlightOverlay spotlightStyle={spotlightStyle} />
         <div className="relative z-10">{children}</div>
@@ -62,6 +65,7 @@ export default function GlassCard({
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={onClick}
     >
       <SpotlightOverlay spotlightStyle={spotlightStyle} />
       <div className="relative z-10" style={{ transform: "translateZ(20px)" }}>
