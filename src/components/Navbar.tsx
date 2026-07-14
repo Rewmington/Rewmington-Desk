@@ -25,7 +25,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/20 backdrop-blur-lg border-b border-white/30">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/40 backdrop-blur-lg border-b border-white/20">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
@@ -84,7 +84,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-white/15 backdrop-blur-lg border-b border-white/20"
+            className="md:hidden overflow-hidden bg-black/40 backdrop-blur-lg border-b border-white/20"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
               {navItems.map((item) => (
