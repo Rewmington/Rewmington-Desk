@@ -34,3 +34,42 @@ export interface SiteConfig {
     photos: number;
   };
 }
+
+export interface Project {
+  name: string;
+  description: string;
+  tags: string[];
+  url: string;
+}
+
+export interface Friend {
+  name: string;
+  url: string;
+  avatar: string;
+  bio: string;
+}
+
+export interface Photo {
+  id: string;
+  src: string;
+  caption: string;
+  date: string;
+  location: string;
+}
+
+// 暂存系统类型
+export type ContentType = "article" | "project" | "friend" | "music" | "photo";
+
+export interface StagingItem {
+  id: string;
+  type: ContentType;
+  data: Record<string, unknown>;
+  stagedAt: string;
+}
+
+export interface ExportFile {
+  version: number;
+  exportedAt: string;
+  source: "myblog-staging";
+  items: Array<{ type: ContentType; data: Record<string, unknown> }>;
+}

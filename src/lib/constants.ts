@@ -1,4 +1,4 @@
-import type { Article, MusicTrack } from "@/types";
+import type { Article, MusicTrack, Project, Friend, Photo } from "@/types";
 
 export const articles: Article[] = [
   {
@@ -78,3 +78,29 @@ export const techBadges = [
     icon: "M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z",
   },
 ];
+
+export const projects: Project[] = [
+  {
+    name: "MyBlog",
+    description: "基于 Next.js 16 的个人主页，毛玻璃拟态设计 + Bento Grid 布局",
+    tags: ["Next.js", "React", "Tailwind CSS"],
+    url: "https://github.com/Rewmington",
+  },
+  {
+    name: "更多项目",
+    description: "即将添加更多项目展示...",
+    tags: ["Coming Soon"],
+    url: "",
+  },
+];
+
+export const friends: Friend[] = [
+  {
+    name: "添加友链",
+    url: "",
+    avatar: "➕",
+    bio: "欢迎交换友链，请在关于页联系我",
+  },
+];
+
+export const photos: Photo[] = [];

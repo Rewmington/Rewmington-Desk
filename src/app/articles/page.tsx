@@ -6,6 +6,7 @@ import {
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { articles } from "@/lib/constants";
+import AddButton from "@/components/staging/AddButton";
 
 export default function ArticlesPage() {
   return (
@@ -35,6 +36,8 @@ export default function ArticlesPage() {
           ))}
         </div>
       </StaggerContainer>
+
+      <AddButton contentType="article" />
     </main>
   );
 }

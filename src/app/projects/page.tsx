@@ -5,21 +5,8 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-
-const projects = [
-  {
-    name: "MyBlog",
-    description: "基于 Next.js 16 的个人主页，毛玻璃拟态设计 + Bento Grid 布局",
-    tags: ["Next.js", "React", "Tailwind CSS"],
-    url: "https://github.com/Rewmington",
-  },
-  {
-    name: "更多项目",
-    description: "即将添加更多项目展示...",
-    tags: ["Coming Soon"],
-    url: "",
-  },
-];
+import { projects } from "@/lib/constants";
+import AddButton from "@/components/staging/AddButton";
 
 export default function ProjectsPage() {
   return (
@@ -78,6 +65,8 @@ export default function ProjectsPage() {
           ))}
         </div>
       </StaggerContainer>
+
+      <AddButton contentType="project" />
     </main>
   );
 }

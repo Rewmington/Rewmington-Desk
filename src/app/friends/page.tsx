@@ -5,15 +5,8 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-
-const friends = [
-  {
-    name: "添加友链",
-    url: "",
-    avatar: "➕",
-    bio: "欢迎交换友链，请在关于页联系我",
-  },
-];
+import { friends } from "@/lib/constants";
+import AddButton from "@/components/staging/AddButton";
 
 export default function FriendsPage() {
   return (
@@ -54,6 +47,8 @@ export default function FriendsPage() {
           ))}
         </div>
       </StaggerContainer>
+
+      <AddButton contentType="friend" />
     </main>
   );
 }
