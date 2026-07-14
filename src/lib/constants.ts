@@ -111,4 +111,11 @@ export const photos: Photo[] = [
     date: "2026-07-14",
     location: "",
   },
+  {
+    id: "2",
+    src: "/images/posts/动漫背景1.png",
+    caption: "动漫背景1",
+    date: "2026-07-14",
+    location: "",
+  },
 ];
