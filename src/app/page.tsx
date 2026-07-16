@@ -3,6 +3,7 @@ import ProfileCard from "@/components/ProfileCard";
 import MusicPlayer from "@/components/MusicPlayer";
 import StatusBar from "@/components/StatusBar";
 import ArticleCard from "@/components/ArticleCard";
+import PhotoCarousel from "@/components/PhotoCarousel";
 import {
   StaggerContainer,
   StaggerItem,
@@ -20,14 +21,21 @@ export default function Home() {
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* 个人信息卡 */}
-          <StaggerItem className="md:col-span-5">
+          {/* 个人信息卡 - 第一行整行 */}
+          <StaggerItem className="md:col-span-12">
             <ProfileCard />
           </StaggerItem>
 
-          {/* 音乐播放器 */}
-          <StaggerItem className="md:col-span-7">
-            <MusicPlayer />
+          {/* 音乐播放器 - 第二行左 */}
+          <StaggerItem className="md:col-span-7 flex">
+            <div className="flex-1">
+              <MusicPlayer />
+            </div>
+          </StaggerItem>
+
+          {/* 照片墙轮播 - 第二行右 */}
+          <StaggerItem className="md:col-span-5 flex">
+            <PhotoCarousel />
           </StaggerItem>
 
           {/* 文章展示 */}

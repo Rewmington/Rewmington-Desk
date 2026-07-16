@@ -15,8 +15,8 @@ export default function MusicPlayer() {
   // 无音乐数据时显示空状态
   if (!track) {
     return (
-      <GlassCard className="p-5 md:p-6">
-        <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+      <GlassCard className="p-5 md:p-6 h-full">
+        <div className="flex items-center justify-center h-full text-gray-400 text-sm">
           🎵 暂无音乐，点击音乐页添加
         </div>
       </GlassCard>
@@ -65,8 +65,8 @@ export default function MusicPlayer() {
   };
 
   return (
-    <GlassCard className="p-5 md:p-6">
-      <div className="flex items-center gap-4">
+    <GlassCard className="p-5 md:p-6 h-full">
+      <div className="flex items-center gap-4 h-full">
         {/* 专辑封面 */}
         <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-purple-400 to-pink-400">
           {/* eslint-disable-next-line @next/next/no-img-element */}
