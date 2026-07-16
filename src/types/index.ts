@@ -27,12 +27,7 @@ export interface SiteConfig {
   bio: string;
   avatarUrl: string;
   buildDate: string; // ISO date string
-  filing: string;
   socials: SocialLink[];
-  stats: {
-    articles: number;
-    photos: number;
-  };
 }
 
 export interface Project {

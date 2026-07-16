@@ -2,7 +2,6 @@
 
 import { useClock } from "@/hooks/useClock";
 import { techBadges } from "@/lib/constants";
-import siteConfig from "../../siteConfig";
 
 export default function StatusBar() {
   const clock = useClock();
@@ -31,10 +30,6 @@ export default function StatusBar() {
         ))}
       </div>
 
-      {/* 右：备案信息 */}
-      <div className="text-gray-500 text-xs hidden sm:block">
-        {siteConfig.filing}
-      </div>
     </div>
   );
 }

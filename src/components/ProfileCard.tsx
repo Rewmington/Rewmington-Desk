@@ -2,6 +2,7 @@
 
 import GlassCard from "./GlassCard";
 import siteConfig from "../../siteConfig";
+import { articles, photos } from "@/lib/constants";
 
 export default function ProfileCard() {
   return (
@@ -30,13 +31,13 @@ export default function ProfileCard() {
           <div className="flex gap-4 md:gap-6 mt-2 justify-center sm:justify-start">
             <div className="text-center">
               <div className="text-xl md:text-2xl font-bold text-gray-800">
-                {siteConfig.stats.articles}
+                {articles.length}
               </div>
               <div className="text-xs text-gray-500">文章</div>
             </div>
             <div className="text-center">
               <div className="text-xl md:text-2xl font-bold text-gray-800">
-                {siteConfig.stats.photos}
+                {photos.length}
               </div>
               <div className="text-xs text-gray-500">照片</div>
             </div>
