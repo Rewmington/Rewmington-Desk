@@ -24,7 +24,7 @@ export const projects: Project[] = [
     name: "MyBlog",
     description: "基于 Next.js 16 的个人主页，毛玻璃拟态设计 + Bento Grid 布局",
     tags: ["Next.js", "React", "Tailwind CSS"],
-    url: "https://github.com/Rewmington",
+    url: "https://github.com/Rewmington/MyBlog",
   },
   {
     name: "更多项目",
