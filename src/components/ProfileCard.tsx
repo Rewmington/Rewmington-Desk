@@ -1,21 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import siteConfig from "../../siteConfig";
 import { articles, photos } from "@/lib/constants";
 
 export default function ProfileCard() {
-  const [daysRunning, setDaysRunning] = useState<number | null>(null);
-
-  useEffect(() => {
-    const buildDate = new Date(siteConfig.buildDate);
-    const today = new Date();
-    const days = Math.floor(
-      (today.getTime() - buildDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    setDaysRunning(days);
-  }, []);
-
   return (
     <div className="bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] rounded-3xl p-5 md:p-6 h-full shadow-[var(--shadow-card)] flex flex-col">
       {/* OS 窗口标题栏 */}
@@ -74,7 +62,7 @@ export default function ProfileCard() {
         </div>
 
         {/* 底部数据条 */}
-        <div className="grid grid-cols-3 gap-2 w-full mt-2">
+        <div className="grid grid-cols-2 gap-2 w-full mt-2">
           <div className="bg-[var(--bg-subtle)] rounded-2xl px-2 py-2 text-center backdrop-blur-sm">
             <div className="text-lg font-bold text-[var(--text-primary)]">{articles.length}</div>
             <div className="text-[10px] text-[var(--text-tertiary)]">文章</div>
@@ -82,12 +70,6 @@ export default function ProfileCard() {
           <div className="bg-[var(--bg-subtle)] rounded-2xl px-2 py-2 text-center backdrop-blur-sm">
             <div className="text-lg font-bold text-[var(--text-primary)]">{photos.length}</div>
             <div className="text-[10px] text-[var(--text-tertiary)]">摄影</div>
-          </div>
-          <div className="bg-[var(--bg-subtle)] rounded-2xl px-2 py-2 text-center backdrop-blur-sm">
-            <div className="text-lg font-bold text-[var(--text-primary)]">
-              {daysRunning !== null ? `${daysRunning}d` : "---"}
-            </div>
-            <div className="text-[10px] text-[var(--text-tertiary)]">运行</div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { SiteConfig } from "@/types";
 
 const siteConfig: SiteConfig = {
   authorName: "Rewmington",
-  bio: "一个喜欢折腾代码和二次元的人 ✨",
+  bio: "个人简介待完善",
   avatarUrl: "/avatar.jpg",
   buildDate: "2025-07-14T00:00:00.000Z",
   socials: [
