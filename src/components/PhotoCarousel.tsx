@@ -3,8 +3,13 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { photos } from "@/lib/constants";
+import type { Photo } from "@/types";
 
-export default function PhotoCarousel() {
+interface PhotoCarouselProps {
+  onPhotoClick?: (photo: Photo) => void;
+}
+
+export default function PhotoCarousel({ onPhotoClick }: PhotoCarouselProps) {
   const [current, setCurrent] = useState(0);
 
   const prev = useCallback(() => {
@@ -33,26 +38,28 @@ export default function PhotoCarousel() {
       ) : (
         <div className="flex-1 flex flex-col">
           {/* 照片区域 */}
-          <div className="relative flex-1 min-h-[200px] rounded-2xl overflow-hidden group">
-            <AnimatePresence mode="wait">
-              <motion.div
+          <div
+            className="relative flex-1 min-h-[200px] rounded-2xl overflow-hidden group cursor-pointer"
+            onClick={() => onPhotoClick?.(photos[current])}
+          >
+            <AnimatePresence mode="popLayout">
+              <motion.img
                 key={photos[current].id}
-                className="absolute inset-0"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photos[current].src}
-                  alt={photos[current].caption || "照片"}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </motion.div>
+                layoutId={`photo-${photos[current].id}`}
+                src={photos[current].src}
+                alt={photos[current].caption || "照片"}
+                className="w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  layout: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.3 },
+                }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-secondary)]/30 via-[var(--accent-primary)]/20 to-[var(--accent-secondary)]/30 -z-10" />
 
@@ -69,7 +76,10 @@ export default function PhotoCarousel() {
             {photos.length > 1 && (
               <>
                 <button
-                  onClick={prev}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prev();
+                  }}
                   className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-[var(--text-primary)] transition-all opacity-0 group-hover:opacity-100"
                   aria-label="上一张"
                 >
@@ -78,7 +88,10 @@ export default function PhotoCarousel() {
                   </svg>
                 </button>
                 <button
-                  onClick={next}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    next();
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-[var(--text-primary)] transition-all opacity-0 group-hover:opacity-100"
                   aria-label="下一张"
                 >

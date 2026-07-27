@@ -1,15 +1,23 @@
+"use client";
+
+import { useState } from "react";
 import SystemTopBar from "@/components/SystemTopBar";
 import ProfileCard from "@/components/ProfileCard";
 import MusicPlayer from "@/components/MusicPlayer";
 import ProjectTracker from "@/components/ProjectTracker";
 import PhotoCarousel from "@/components/PhotoCarousel";
 import StatusBar from "@/components/StatusBar";
+import PhotoLightbox from "@/components/PhotoLightbox";
 import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
+import { photos } from "@/lib/constants";
+import type { Photo } from "@/types";
 
 export default function Home() {
+  const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
+
   return (
     <main className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
       <StaggerContainer>
@@ -37,7 +45,7 @@ export default function Home() {
 
           {/* 照片墙 - 2x2 大卡 */}
           <StaggerItem className="md:col-span-2 md:row-span-2">
-            <PhotoCarousel />
+            <PhotoCarousel onPhotoClick={(photo) => setLightboxPhoto(photo)} />
           </StaggerItem>
 
           {/* 快捷信息卡 - 1x1 */}
@@ -66,6 +74,14 @@ export default function Home() {
           </StaggerItem>
         </div>
       </StaggerContainer>
+
+      {/* 照片 Lightbox */}
+      <PhotoLightbox
+        photo={lightboxPhoto}
+        photos={photos}
+        onClose={() => setLightboxPhoto(null)}
+        onNavigate={(photo) => setLightboxPhoto(photo)}
+      />
     </main>
   );
 }
