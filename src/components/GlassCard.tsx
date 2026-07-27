@@ -37,9 +37,7 @@ export default function GlassCard({
     spotlightMouseMove(e);
   };
 
-  const baseClasses = variant === "transparent"
-    ? "relative overflow-hidden bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-    : "relative overflow-hidden bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
+  const baseClasses = "relative overflow-hidden bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] rounded-3xl shadow-[var(--shadow-card)]";
 
   if (!enableTilt) {
     return (

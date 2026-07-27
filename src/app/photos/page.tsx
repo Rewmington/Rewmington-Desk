@@ -27,10 +27,10 @@ export default function PhotosPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-2">
               📷 照片墙
             </h1>
-            <p className="text-slate-400 text-sm md:text-base">
+            <p className="text-[var(--text-secondary)] text-sm md:text-base">
               用镜头记录生活瞬间
             </p>
           </div>
@@ -41,13 +41,13 @@ export default function PhotosPage() {
           <StaggerItem>
             <GlassCard className="p-12 md:p-20 text-center">
               <div className="text-6xl mb-4">📸</div>
-              <h3 className="text-slate-300 text-lg font-medium mb-2">
+              <h3 className="text-[var(--text-secondary)] text-lg font-medium mb-2">
                 照片墙即将上线
               </h3>
-              <p className="text-slate-500 text-sm">
+              <p className="text-[var(--text-tertiary)] text-sm">
                 正在整理照片，敬请期待...
               </p>
-              <p className="text-slate-500 text-xs mt-2">
+              <p className="text-[var(--text-tertiary)] text-xs mt-2">
                 点击右下角 + 按钮添加照片
               </p>
             </GlassCard>
@@ -68,12 +68,12 @@ export default function PhotosPage() {
                       }}
                     />
                     {/* 渐变回退 */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#00D1FF]/30 via-[#00FFA3]/20 to-[#00D1FF]/30 -z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-secondary)]/30 via-[var(--accent-primary)]/20 to-[var(--accent-secondary)]/30 -z-10" />
                     {/* 悬浮信息 */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-end">
                       <div className="w-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         {photo.caption && (
-                          <p className="text-white text-sm truncate">
+                          <p className="text-[var(--text-primary)] text-sm truncate">
                             {photo.caption}
                           </p>
                         )}
@@ -115,7 +115,7 @@ export default function PhotosPage() {
           >
             <div>
               {lightbox.caption && (
-                <p className="text-white text-base font-medium">
+                <p className="text-[var(--text-primary)] text-base font-medium">
                   {lightbox.caption}
                 </p>
               )}
@@ -129,7 +129,7 @@ export default function PhotosPage() {
               {/* 下载按钮 */}
               <button
                 onClick={() => handleDownload(lightbox.src, lightbox.caption)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-10 h-10 rounded-full bg-[var(--bg-subtle-hover)] hover:bg-white/20 flex items-center justify-center text-[var(--text-primary)] transition-colors"
                 title="下载到本地"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@ export default function PhotosPage() {
               {/* 关闭按钮 */}
               <button
                 onClick={() => setLightbox(null)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-10 h-10 rounded-full bg-[var(--bg-subtle-hover)] hover:bg-white/20 flex items-center justify-center text-[var(--text-primary)] transition-colors"
                 title="关闭"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

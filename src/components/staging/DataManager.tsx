@@ -74,13 +74,13 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
       />
 
       {/* 侧边抽屉 */}
-      <div className="fixed top-0 right-0 z-[101] h-full w-[400px] max-w-[90vw] bg-[rgba(20,21,23,0.85)] glass-backdrop border-l border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-slide-in-right flex flex-col">
+      <div className="fixed top-0 right-0 z-[101] h-full w-[400px] max-w-[90vw] bg-[var(--bg-card)] glass-backdrop border-l border-[var(--border-card)] shadow-[var(--shadow-card)] animate-slide-in-right flex flex-col">
         {/* 标题栏 */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className="text-lg font-bold text-white">📦 暂存数据管理</h2>
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border-card)]">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">📦 暂存数据管理</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle-hover)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -103,10 +103,10 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
           {!hasItems ? (
             <div className="text-center py-12">
               <div className="text-4xl mb-4">📭</div>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[var(--text-secondary)] text-sm">
                 暂无暂存数据
               </p>
-              <p className="text-slate-500 text-xs mt-1">
+              <p className="text-[var(--text-tertiary)] text-xs mt-1">
                 点击页面上的 + 按钮添加内容
               </p>
             </div>
@@ -118,9 +118,9 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
 
                 return (
                   <div key={type}>
-                    <h3 className="text-sm font-bold text-slate-300 mb-3">
+                    <h3 className="text-sm font-bold text-[var(--text-secondary)] mb-3">
                       {TYPE_LABELS[type]}{" "}
-                      <span className="text-slate-500 font-normal">
+                      <span className="text-[var(--text-tertiary)] font-normal">
                         ({typeItems.length})
                       </span>
                     </h3>
@@ -128,19 +128,19 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
                       {typeItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-card)]"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white truncate">
+                            <p className="text-sm text-[var(--text-primary)] truncate">
                               {getItemSummary(item)}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-[var(--text-tertiary)]">
                               {new Date(item.stagedAt).toLocaleString("zh-CN")}
                             </p>
                           </div>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-red-400/20 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                            className="w-7 h-7 rounded-lg bg-[var(--bg-subtle)] hover:bg-red-400/20 flex items-center justify-center text-[var(--text-tertiary)] hover:text-red-400 transition-colors shrink-0"
                             title="删除"
                           >
                             <svg
@@ -169,9 +169,9 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
 
         {/* 底部操作栏 */}
         {hasItems && (
-          <div className="p-6 border-t border-white/10">
+          <div className="p-6 border-t border-[var(--border-card)]">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-[var(--text-secondary)]">
                 共 {items.length} 条暂存数据
               </span>
               <button
@@ -180,7 +180,7 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
                     clearAll();
                   }
                 }}
-                className="text-xs text-slate-500 hover:text-red-400 transition-colors"
+                className="text-xs text-[var(--text-tertiary)] hover:text-red-400 transition-colors"
               >
                 清空全部
               </button>
@@ -189,7 +189,7 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
               onClick={() => {
                 downloadExport();
               }}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#00D1FF] to-[#00FFA3] text-white font-medium text-sm hover:from-[#00D1FF]/90 hover:to-[#00FFA3]/90 transition-all shadow-md glow-accent flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] text-[var(--text-primary)] font-medium text-sm hover:from-[var(--accent-secondary)]/90 hover:to-[var(--accent-primary)]/90 transition-all shadow-md glow-accent flex items-center justify-center gap-2"
             >
               <svg
                 className="w-4 h-4"
@@ -206,7 +206,7 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
               </svg>
               导出数据 (JSON)
             </button>
-            <p className="text-xs text-slate-500 text-center mt-2">
+            <p className="text-xs text-[var(--text-tertiary)] text-center mt-2">
               导出后请将文件放到项目根目录，然后手动将数据写入源码常量
             </p>
           </div>

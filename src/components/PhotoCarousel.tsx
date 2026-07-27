@@ -16,17 +16,16 @@ export default function PhotoCarousel() {
   }, []);
 
   return (
-    <div className="bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl p-5 md:p-6 h-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col">
+    <div className="bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] rounded-3xl p-5 md:p-6 h-full shadow-[var(--shadow-card)] flex flex-col">
       {/* OS 窗口标题栏 */}
       <div className="os-titlebar">
         <div className="os-dot bg-red-400" />
         <div className="os-dot bg-yellow-400" />
         <div className="os-dot bg-green-400" />
-        <span className="ml-2 text-xs text-slate-500 font-mono">photo.gallery</span>
       </div>
 
       {photos.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
+        <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-tertiary)]">
           <div className="text-5xl mb-3">📸</div>
           <p className="text-sm">照片墙即将上线</p>
           <p className="text-xs mt-1">正在整理照片...</p>
@@ -55,12 +54,12 @@ export default function PhotoCarousel() {
                 />
               </motion.div>
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00D1FF]/30 via-[#00FFA3]/20 to-[#00D1FF]/30 -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-secondary)]/30 via-[var(--accent-primary)]/20 to-[var(--accent-secondary)]/30 -z-10" />
 
             {/* 底部信息 */}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-3 pt-8">
               {photos[current].caption && (
-                <p className="text-white text-sm font-medium truncate">
+                <p className="text-[var(--text-primary)] text-sm font-medium truncate">
                   {photos[current].caption}
                 </p>
               )}
@@ -71,7 +70,7 @@ export default function PhotoCarousel() {
               <>
                 <button
                   onClick={prev}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-[var(--text-primary)] transition-all opacity-0 group-hover:opacity-100"
                   aria-label="上一张"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +79,7 @@ export default function PhotoCarousel() {
                 </button>
                 <button
                   onClick={next}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-[var(--text-primary)] transition-all opacity-0 group-hover:opacity-100"
                   aria-label="下一张"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +99,7 @@ export default function PhotoCarousel() {
                   onClick={() => setCurrent(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     i === current
-                      ? "bg-[#00FFA3] w-6 glow-accent"
+                      ? "bg-[var(--accent-primary)] w-6 glow-accent"
                       : "bg-white/20 w-1.5 hover:bg-white/30"
                   }`}
                   aria-label={`第 ${i + 1} 张`}

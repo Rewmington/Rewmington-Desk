@@ -15,10 +15,10 @@ export default function FriendsPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-2">
               🔗 友链
             </h1>
-            <p className="text-slate-400 text-sm md:text-base">
+            <p className="text-[var(--text-secondary)] text-sm md:text-base">
               互联网上的朋友们
             </p>
           </div>
@@ -30,14 +30,14 @@ export default function FriendsPage() {
             <StaggerItem key={friend.name}>
               <GlassCard className="p-6 h-full">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#00D1FF] to-[#00FFA3] flex items-center justify-center text-2xl shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--accent-secondary)] to-[var(--accent-primary)] flex items-center justify-center text-2xl shrink-0">
                     {friend.avatar}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-white font-bold text-base truncate">
+                    <h3 className="text-[var(--text-primary)] font-bold text-base truncate">
                       {friend.name}
                     </h3>
-                    <p className="text-slate-400 text-sm truncate">
+                    <p className="text-[var(--text-secondary)] text-sm truncate">
                       {friend.bio}
                     </p>
                   </div>

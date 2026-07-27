@@ -82,17 +82,17 @@ export default function AddDialog({
       {/* 对话框 */}
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
         <div
-          className="relative w-full max-w-[560px] bg-[rgba(20,21,23,0.85)] glass-backdrop border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-6 pointer-events-auto animate-fade-in-up"
+          className="relative w-full max-w-[560px] bg-[var(--bg-card)] glass-backdrop border border-[var(--border-card)] rounded-[24px] shadow-[var(--shadow-card)] p-6 pointer-events-auto animate-fade-in-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 标题栏 */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">
               {CONTENT_ICONS[contentType]} {CONTENT_LABELS[contentType]}
             </h2>
             <button
               onClick={handleClose}
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle-hover)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <svg
                 className="w-4 h-4"
@@ -112,7 +112,7 @@ export default function AddDialog({
 
           {/* 暂存成功提示 */}
           {staged && (
-            <div className="mb-4 px-4 py-2 rounded-xl bg-[#00FFA3]/10 border border-[#00FFA3]/30 text-[#00FFA3] text-sm text-center">
+            <div className="mb-4 px-4 py-2 rounded-xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] text-sm text-center">
               ✅ 已暂存到本地！可在导航栏数据管理中导出
             </div>
           )}
@@ -124,7 +124,7 @@ export default function AddDialog({
           <div className="mt-4 flex items-center justify-between">
             <button
               onClick={() => setShowManager(true)}
-              className="text-sm text-slate-500 hover:text-white transition-colors flex items-center gap-1"
+              className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
             >
               <svg
                 className="w-4 h-4"
@@ -143,7 +143,7 @@ export default function AddDialog({
             </button>
             <button
               onClick={handleClose}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm transition-colors"
+              className="px-4 py-2 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle-hover)] text-[var(--text-secondary)] text-sm transition-colors"
             >
               关闭
             </button>

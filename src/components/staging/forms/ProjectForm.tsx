@@ -7,9 +7,9 @@ interface ProjectFormProps {
 }
 
 const inputClass =
-  "w-full bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-white/20 focus:bg-white/10 transition-colors";
+  "w-full bg-[var(--bg-subtle)] backdrop-blur-sm border border-[var(--border-card)] rounded-xl px-4 py-2 text-[var(--text-primary)] placeholder-[var(--text-tertiary)] text-sm focus:outline-none focus:border-[var(--border-card)] focus:bg-[var(--bg-subtle-hover)] transition-colors";
 
-const labelClass = "block text-sm font-medium text-slate-300 mb-1";
+const labelClass = "block text-sm font-medium text-[var(--text-secondary)] mb-1";
 
 export default function ProjectForm({ onStaged }: ProjectFormProps) {
   const [name, setName] = useState("");
@@ -90,7 +90,7 @@ export default function ProjectForm({ onStaged }: ProjectFormProps) {
 
       <button
         type="submit"
-        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#00D1FF] to-[#00FFA3] text-white font-medium text-sm hover:from-[#00D1FF]/90 hover:to-[#00FFA3]/90 transition-all shadow-md glow-accent"
+        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] text-[var(--text-primary)] font-medium text-sm hover:from-[var(--accent-secondary)]/90 hover:to-[var(--accent-primary)]/90 transition-all shadow-md glow-accent"
       >
         暂存到本地
       </button>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "@/components/ThemeProvider";
 
 import DataManager from "@/components/staging/DataManager";
 
@@ -21,6 +22,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dataManagerOpen, setDataManagerOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -28,12 +30,12 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(20,21,23,0.8)] glass-backdrop border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-navbar)] glass-backdrop border-b border-[var(--border-subtle)]">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-lg font-bold text-white">
+            <span className="text-lg font-bold text-[var(--text-primary)]">
               ⚡ Rewmington
             </span>
           </Link>
@@ -46,18 +48,35 @@ export default function Navbar() {
                 href={item.href}
                 className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
                   isActive(item.href)
-                    ? "text-white font-medium bg-white/10 shadow-sm"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? "text-[var(--text-primary)] font-medium bg-[var(--bg-subtle-hover)] shadow-sm"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                 }`}
               >
                 {item.label}
               </Link>
             ))}
 
+            {/* 主题切换按钮 */}
+            <button
+              onClick={toggleTheme}
+              className="ml-2 w-8 h-8 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle-hover)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              title={theme === "dark" ? "切换亮色模式" : "切换暗色模式"}
+            >
+              {theme === "dark" ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 5.354a9 9 0 010 12.728M12 21a9 9 0 100-18 9 9 0 000 18zm0-4a5 5 0 100-10 5 5 0 000 10z" />
+                </svg>
+              )}
+            </button>
+
             {/* 数据管理按钮 */}
             <button
               onClick={() => setDataManagerOpen(true)}
-              className="ml-2 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              className="ml-1 w-8 h-8 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-subtle-hover)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               title="暂存数据管理"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,8 +88,23 @@ export default function Navbar() {
           {/* 右侧按钮组（移动端） */}
           <div className="flex md:hidden items-center gap-2">
             <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              title={theme === "dark" ? "切换亮色模式" : "切换暗色模式"}
+            >
+              {theme === "dark" ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 5.354a9 9 0 010 12.728M12 21a9 9 0 100-18 9 9 0 000 18zm0-4a5 5 0 100-10 5 5 0 000 10z" />
+                </svg>
+              )}
+            </button>
+            <button
               onClick={() => setDataManagerOpen(true)}
-              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               title="暂存数据管理"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +112,7 @@ export default function Navbar() {
               </svg>
             </button>
             <button
-              className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="菜单"
             >
@@ -102,7 +136,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-[rgba(20,21,23,0.8)] glass-backdrop border-b border-white/10"
+            className="md:hidden overflow-hidden bg-[var(--bg-navbar)] glass-backdrop border-b border-[var(--border-subtle)]"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
               {navItems.map((item) => (
@@ -112,8 +146,8 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition-colors ${
                     isActive(item.href)
-                      ? "bg-white/10 text-white font-medium"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? "bg-[var(--bg-subtle-hover)] text-[var(--text-primary)] font-medium"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                   }`}
                 >
                   <svg

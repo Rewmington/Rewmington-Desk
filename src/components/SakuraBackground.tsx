@@ -48,7 +48,8 @@ export default function SakuraBackground() {
             height: `${petal.size}px`,
             opacity: 0,
             borderRadius: "100% 0 100% 0",
-            background: `linear-gradient(135deg, rgba(0,209,255,${petal.opacity}), rgba(0,255,163,${petal.opacity}))`,
+            // 通过 CSS 变量读取主题粒子色（RGB 分量），自动响应主题切换
+            background: `linear-gradient(135deg, rgba(var(--particle-start),${petal.opacity}), rgba(var(--particle-end),${petal.opacity}))`,
             animation: `sakuraFall ${petal.duration}s ${petal.delay}s linear infinite`,
             transform: `rotate(${petal.rotate}deg)`,
             ["--drift" as string]: `${petal.drift}vw`,
