@@ -48,7 +48,7 @@ export default function SakuraBackground() {
             height: `${petal.size}px`,
             opacity: 0,
             borderRadius: "100% 0 100% 0",
-            background: `linear-gradient(135deg, rgba(255,183,197,${petal.opacity}), rgba(255,218,233,${petal.opacity}))`,
+            background: `linear-gradient(135deg, rgba(0,209,255,${petal.opacity}), rgba(0,255,163,${petal.opacity}))`,
             animation: `sakuraFall ${petal.duration}s ${petal.delay}s linear infinite`,
             transform: `rotate(${petal.rotate}deg)`,
             ["--drift" as string]: `${petal.drift}vw`,

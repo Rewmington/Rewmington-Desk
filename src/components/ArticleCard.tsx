@@ -34,8 +34,8 @@ export default function ArticleCard({ article }: { article: Article }) {
           <div
             className={`absolute inset-0 ${
               isImage
-                ? "bg-gradient-to-br from-purple-300/80 via-pink-200/60 to-blue-200/80"
-                : "bg-gradient-to-br from-purple-200/60 via-pink-100/40 to-blue-100/60"
+                ? "bg-gradient-to-br from-[#00D1FF]/30 via-[#00FFA3]/20 to-[#00D1FF]/30"
+                : "bg-gradient-to-br from-[#00D1FF]/20 via-[#00FFA3]/10 to-[#00D1FF]/20"
             }`}
           />
         </div>

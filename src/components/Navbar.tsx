@@ -12,7 +12,7 @@ const navItems = [
   { href: "/articles/", label: "文章", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
   { href: "/projects/", label: "项目", icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" },
   { href: "/photos/", label: "照片墙", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
-  { href: "/friends/", label: "友链", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
+  { href: "/friends/", label: "友链", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 7 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
   { href: "/music/", label: "音乐", icon: "M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" },
   { href: "/about/", label: "关于", icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
 ];
@@ -28,17 +28,17 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/30 glass-backdrop border-b border-white/30">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(20,21,23,0.8)] glass-backdrop border-b border-white/10">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="text-lg font-bold text-gray-800">
-              🌸 Rewmington
+            <span className="text-lg font-bold text-white">
+              ⚡ Rewmington
             </span>
           </Link>
 
-          {/* 桌面端导航 - 用 CSS transition 替代 layoutId */}
+          {/* 桌面端导航 */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
@@ -46,8 +46,8 @@ export default function Navbar() {
                 href={item.href}
                 className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
                   isActive(item.href)
-                    ? "text-gray-800 font-medium bg-white/40 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/20"
+                    ? "text-white font-medium bg-white/10 shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}
               >
                 {item.label}
@@ -57,7 +57,7 @@ export default function Navbar() {
             {/* 数据管理按钮 */}
             <button
               onClick={() => setDataManagerOpen(true)}
-              className="ml-2 w-8 h-8 rounded-full bg-white/30 hover:bg-white/50 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors"
+              className="ml-2 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
               title="暂存数据管理"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +70,7 @@ export default function Navbar() {
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={() => setDataManagerOpen(true)}
-              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
               title="暂存数据管理"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@ export default function Navbar() {
               </svg>
             </button>
             <button
-              className="w-10 h-10 flex items-center justify-center text-gray-700 hover:text-gray-900 transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="菜单"
             >
@@ -102,7 +102,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden bg-white/30 glass-backdrop border-b border-white/30"
+            className="md:hidden overflow-hidden bg-[rgba(20,21,23,0.8)] glass-backdrop border-b border-white/10"
           >
             <div className="px-4 py-3 flex flex-col gap-1">
               {navItems.map((item) => (
@@ -112,8 +112,8 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm transition-colors ${
                     isActive(item.href)
-                      ? "bg-white/40 text-gray-800 font-medium"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-white/20"
+                      ? "bg-white/10 text-white font-medium"
+                      : "text-slate-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   <svg

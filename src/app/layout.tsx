@@ -30,14 +30,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col relative mesh-gradient">
-        {/* 梦幻光晕 - 增强版 */}
+        {/* 深色微光光晕 */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[120px] animate-[float_8s_ease-in-out_infinite]" />
-          <div className="absolute bottom-[10%] right-[5%] w-[500px] h-[500px] bg-pink-400/20 rounded-full blur-[120px] animate-[float_10s_ease-in-out_infinite_1s]" />
-          <div className="absolute top-[50%] left-[50%] w-[400px] h-[400px] bg-blue-400/15 rounded-full blur-[100px] animate-[float_12s_ease-in-out_infinite_2s]" />
+          <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-[#00FFA3]/5 rounded-full blur-[120px] animate-[float_8s_ease-in-out_infinite]" />
+          <div className="absolute bottom-[10%] right-[5%] w-[500px] h-[500px] bg-[#00D1FF]/5 rounded-full blur-[120px] animate-[float_10s_ease-in-out_infinite_1s]" />
+          <div className="absolute top-[50%] left-[50%] w-[400px] h-[400px] bg-[#6366f1]/5 rounded-full blur-[100px] animate-[float_12s_ease-in-out_infinite_2s]" />
         </div>
 
-        {/* 樱花飘落 */}
+        {/* 光点粒子 */}
         <SakuraBackground />
 
         {/* 导航栏 */}

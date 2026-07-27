@@ -86,17 +86,17 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="bg-white/20 backdrop-blur-xl border border-white/50 rounded-3xl p-5 md:p-6 h-full shadow-lg shadow-black/5 flex flex-col">
+    <div className="bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl p-5 md:p-6 h-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col">
       {/* OS 窗口标题栏 */}
       <div className="os-titlebar">
         <div className="os-dot bg-red-400" />
         <div className="os-dot bg-yellow-400" />
         <div className="os-dot bg-green-400" />
-        <span className="ml-2 text-xs text-gray-500 font-mono">media.control</span>
+        <span className="ml-2 text-xs text-slate-500 font-mono">media.control</span>
       </div>
 
       {!track ? (
-        <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+        <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
           🎵 暂无音乐
         </div>
       ) : (
@@ -104,7 +104,7 @@ export default function MusicPlayer() {
           {/* 黑胶唱片旋转封面 */}
           <div className="relative shrink-0">
             <motion.div
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg border-2 border-white/30"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg border-2 border-white/10"
               animate={{ rotate: isPlaying ? 360 : 0 }}
               transition={{
                 duration: 8,
@@ -123,29 +123,29 @@ export default function MusicPlayer() {
               />
               {/* 黑胶中心孔 */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-5 h-5 rounded-full bg-black/20 border-2 border-white/30" />
+                <div className="w-5 h-5 rounded-full bg-black/40 border-2 border-white/10" />
               </div>
             </motion.div>
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 -z-10" />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#00D1FF] to-[#00FFA3] -z-10 blur-sm opacity-60" />
           </div>
 
           {/* 歌曲信息 + 进度 + 波形 */}
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             <div>
-              <div className="text-gray-800 font-semibold text-sm truncate">
+              <div className="text-white font-semibold text-sm truncate">
                 {track.title}
               </div>
-              <div className="text-gray-500 text-xs">{track.artist}</div>
+              <div className="text-slate-400 text-xs">{track.artist}</div>
             </div>
 
             {/* 进度条 */}
             <div
               ref={progressRef}
-              className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden cursor-pointer group"
+              className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden cursor-pointer group"
               onClick={handleProgressClick}
             >
               <div
-                className="h-full bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-150 relative"
+                className="h-full bg-gradient-to-r from-[#00D1FF] to-[#00FFA3] rounded-full transition-all duration-150 relative"
                 style={{ width: `${progress}%` }}
               >
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -153,7 +153,7 @@ export default function MusicPlayer() {
             </div>
 
             {/* 时间 */}
-            <div className="flex justify-between text-[10px] text-gray-400 tabular-nums">
+            <div className="flex justify-between text-[10px] text-slate-500 tabular-nums">
               <span>{currentTime}</span>
               <span>{duration}</span>
             </div>
@@ -165,7 +165,7 @@ export default function MusicPlayer() {
                 {[18, 22, 14, 20, 16, 24, 12, 20, 18, 14, 22, 16].map((peak, i) => (
                   <motion.div
                     key={i}
-                    className="w-[2px] bg-gradient-to-t from-purple-400/80 to-pink-400/80 rounded-full"
+                    className="w-[2px] bg-gradient-to-t from-[#00D1FF]/80 to-[#00FFA3]/80 rounded-full"
                     animate={
                       isPlaying
                         ? { height: [3, peak, 5, peak - 4, 3] }
@@ -188,12 +188,12 @@ export default function MusicPlayer() {
 
               {/* 控制按钮 */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <button onClick={handlePrev} className="text-gray-400 hover:text-gray-700 transition-colors">
+                <button onClick={handlePrev} className="text-slate-500 hover:text-white transition-colors">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
                 </button>
                 <button
                   onClick={handlePlayPause}
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 flex items-center justify-center transition-all shadow-md"
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-[#00D1FF] to-[#00FFA3] hover:from-[#00D1FF]/90 hover:to-[#00FFA3]/90 flex items-center justify-center transition-all shadow-md glow-accent"
                 >
                   {isPlaying ? (
                     <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
@@ -201,7 +201,7 @@ export default function MusicPlayer() {
                     <svg className="w-3.5 h-3.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                   )}
                 </button>
-                <button onClick={handleNext} className="text-gray-400 hover:text-gray-700 transition-colors">
+                <button onClick={handleNext} className="text-slate-500 hover:text-white transition-colors">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
                 </button>
               </div>

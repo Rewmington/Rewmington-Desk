@@ -16,17 +16,17 @@ export default function PhotoCarousel() {
   }, []);
 
   return (
-    <div className="bg-white/20 backdrop-blur-xl border border-white/50 rounded-3xl p-5 md:p-6 h-full shadow-lg shadow-black/5 flex flex-col">
+    <div className="bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl p-5 md:p-6 h-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col">
       {/* OS 窗口标题栏 */}
       <div className="os-titlebar">
         <div className="os-dot bg-red-400" />
         <div className="os-dot bg-yellow-400" />
         <div className="os-dot bg-green-400" />
-        <span className="ml-2 text-xs text-gray-500 font-mono">photo.gallery</span>
+        <span className="ml-2 text-xs text-slate-500 font-mono">photo.gallery</span>
       </div>
 
       {photos.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+        <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
           <div className="text-5xl mb-3">📸</div>
           <p className="text-sm">照片墙即将上线</p>
           <p className="text-xs mt-1">正在整理照片...</p>
@@ -55,7 +55,7 @@ export default function PhotoCarousel() {
                 />
               </motion.div>
             </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-300/80 via-pink-200/60 to-blue-200/80 -z-10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00D1FF]/30 via-[#00FFA3]/20 to-[#00D1FF]/30 -z-10" />
 
             {/* 底部信息 */}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-3 pt-8">
@@ -100,8 +100,8 @@ export default function PhotoCarousel() {
                   onClick={() => setCurrent(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     i === current
-                      ? "bg-purple-400 w-6"
-                      : "bg-white/30 w-1.5 hover:bg-white/50"
+                      ? "bg-[#00FFA3] w-6 glow-accent"
+                      : "bg-white/20 w-1.5 hover:bg-white/30"
                   }`}
                   aria-label={`第 ${i + 1} 张`}
                 />

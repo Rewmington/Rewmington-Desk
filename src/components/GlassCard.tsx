@@ -38,8 +38,8 @@ export default function GlassCard({
   };
 
   const baseClasses = variant === "transparent"
-    ? "relative overflow-hidden bg-white/20 backdrop-blur-xl border border-white/50 rounded-3xl shadow-lg shadow-black/5"
-    : "relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/50 rounded-3xl shadow-lg shadow-black/5";
+    ? "relative overflow-hidden bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+    : "relative overflow-hidden bg-[rgba(20,21,23,0.65)] backdrop-blur-[20px] saturate-[1.8] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]";
 
   if (!enableTilt) {
     return (

@@ -16,10 +16,10 @@ export default function ArticlesPage() {
         {/* 页面标题 */}
         <StaggerItem>
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               📝 文章
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-slate-400 text-sm md:text-base">
               记录技术探索与思考
             </p>
           </div>
@@ -29,10 +29,10 @@ export default function ArticlesPage() {
           <StaggerItem>
             <GlassCard className="p-12 md:p-20 text-center">
               <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-gray-700 text-lg font-medium mb-2">
+              <h3 className="text-slate-300 text-lg font-medium mb-2">
                 还没有文章
               </h3>
-              <p className="text-gray-500 text-sm">
+              <p className="text-slate-500 text-sm">
                 点击右下角 + 按钮添加第一篇文章
               </p>
             </GlassCard>

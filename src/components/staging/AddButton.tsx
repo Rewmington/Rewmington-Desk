@@ -32,7 +32,7 @@ export default function AddButton({ contentType }: AddButtonProps) {
       {/* 浮动添加按钮 */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 z-40 w-12 h-12 rounded-full bg-white/40 glass-backdrop border border-white/30 shadow-lg shadow-black/5 flex items-center justify-center text-gray-600 hover:bg-white/60 hover:text-gray-800 hover:scale-110 transition-all duration-200 group"
+        className="fixed bottom-8 right-8 z-40 w-12 h-12 rounded-full bg-[rgba(20,21,23,0.65)] glass-backdrop border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-center text-slate-400 hover:bg-[rgba(20,21,23,0.8)] hover:text-white hover:scale-110 transition-all duration-200 group"
         title={CONTENT_LABELS[contentType]}
       >
         <svg
@@ -49,7 +49,7 @@ export default function AddButton({ contentType }: AddButtonProps) {
           />
         </svg>
         {/* Tooltip */}
-        <span className="absolute right-full mr-3 px-3 py-1.5 rounded-lg bg-white/60 glass-backdrop border border-white/30 text-gray-700 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <span className="absolute right-full mr-3 px-3 py-1.5 rounded-lg bg-[rgba(20,21,23,0.85)] glass-backdrop border border-white/10 text-slate-300 text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
           {CONTENT_ICONS[contentType]} {CONTENT_LABELS[contentType]}
         </span>
       </button>
