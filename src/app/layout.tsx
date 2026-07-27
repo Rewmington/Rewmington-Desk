@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Rewmington's Workbench OS",
-  description: "个人工作台仪表盘 ✨",
+  description: "Personal Workbench Dashboard",
 };
 
 export default function RootLayout({
