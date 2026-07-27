@@ -50,14 +50,14 @@ export const friends: Friend[] = [
 export const photos: Photo[] = [
   {
     id: "1",
-    src: "/images/posts/穹大头照.jpg",
+    src: "/images/posts/qiong-portrait.jpg",
     caption: "穹大头照",
     date: "2026-07-14",
     location: "",
   },
   {
     id: "2",
-    src: "/images/posts/动漫背景1.png",
+    src: "/images/posts/anime-bg-1.png",
     caption: "动漫背景1",
     date: "2026-07-14",
     location: "",
