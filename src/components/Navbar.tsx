@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+
 import DataManager from "@/components/staging/DataManager";
 
 const navItems = [
@@ -37,26 +38,19 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* 桌面端导航 */}
+          {/* 桌面端导航 - 用 CSS transition 替代 layoutId */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative px-3 py-1.5 rounded-full text-sm transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-sm transition-all duration-200 ${
                   isActive(item.href)
-                    ? "text-gray-800 font-medium"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "text-gray-800 font-medium bg-white/40 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-white/20"
                 }`}
               >
-                {isActive(item.href) && (
-                  <motion.div
-                    layoutId="navbar-active"
-                    className="absolute inset-0 bg-white/40 rounded-full"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{item.label}</span>
+                {item.label}
               </Link>
             ))}
 

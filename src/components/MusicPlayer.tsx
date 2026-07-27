@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import GlassCard from "./GlassCard";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { musicTracks } from "@/lib/constants";
 
 export default function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState("0:00");
+  const [duration, setDuration] = useState("0:00");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   const track = musicTracks[currentTrack];
 
-  // 无音乐数据时显示空状态
-  if (!track) {
-    return (
-      <GlassCard className="p-5 md:p-6 h-full">
-        <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-          🎵 暂无音乐，点击音乐页添加
-        </div>
-      </GlassCard>
-    );
-  }
+  const formatTime = useCallback((seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }, []);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -40,17 +39,31 @@ export default function MusicPlayer() {
     const updateProgress = () => {
       if (audio.duration) {
         setProgress((audio.currentTime / audio.duration) * 100);
+        setCurrentTime(formatTime(audio.currentTime));
       }
     };
 
+    const updateDuration = () => {
+      if (audio.duration) {
+        setDuration(formatTime(audio.duration));
+      }
+    };
+
+    const handleEnded = () => {
+      setCurrentTrack((prev) => (prev + 1) % musicTracks.length);
+      setProgress(0);
+    };
+
     audio.addEventListener("timeupdate", updateProgress);
-    audio.addEventListener("ended", handleNext);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
       audio.removeEventListener("timeupdate", updateProgress);
-      audio.removeEventListener("ended", handleNext);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, [currentTrack]);
+  }, [currentTrack, formatTime]);
 
   const handlePlayPause = () => setIsPlaying(!isPlaying);
 
@@ -64,92 +77,140 @@ export default function MusicPlayer() {
     setProgress(0);
   };
 
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !audioRef.current?.duration) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    audioRef.current.currentTime = percentage * audioRef.current.duration;
+  };
+
   return (
-    <GlassCard className="p-5 md:p-6 h-full">
-      <div className="flex items-center gap-4 h-full">
-        {/* 专辑封面 */}
-        <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-purple-400 to-pink-400">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={track.cover}
-            alt={track.title}
-            className="w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        </div>
-
-        {/* 歌曲信息 + 进度条 + 频谱 */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
-          <div>
-            <div className="text-gray-800 font-semibold text-sm md:text-base truncate">
-              {track.title}
-            </div>
-            <div className="text-gray-500 text-xs mt-0.5">{track.artist}</div>
-          </div>
-
-          {/* 毛玻璃进度条 */}
-          <div className="w-full h-2 bg-white/20 rounded-full backdrop-blur-sm overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          {/* 频谱动画柱 */}
-          <div className="flex items-end gap-0.5 h-5">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="w-1 bg-gradient-to-t from-purple-400 to-pink-400 rounded-full"
-                style={{
-                  height: "4px",
-                  animation: isPlaying
-                    ? `audioBar ${0.5 + i * 0.15}s ease-in-out infinite`
-                    : "none",
-                  animationDelay: `${i * 0.1}s`,
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* 控制按钮 */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={handlePrev}
-            className="text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-            </svg>
-          </button>
-          <button
-            onClick={handlePlayPause}
-            className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/50 flex items-center justify-center transition-colors"
-          >
-            {isPlaying ? (
-              <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 text-gray-700 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            )}
-          </button>
-          <button
-            onClick={handleNext}
-            className="text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-            </svg>
-          </button>
-        </div>
+    <div className="bg-white/20 backdrop-blur-xl border border-white/50 rounded-3xl p-5 md:p-6 h-full shadow-lg shadow-black/5 flex flex-col">
+      {/* OS 窗口标题栏 */}
+      <div className="os-titlebar">
+        <div className="os-dot bg-red-400" />
+        <div className="os-dot bg-yellow-400" />
+        <div className="os-dot bg-green-400" />
+        <span className="ml-2 text-xs text-gray-500 font-mono">media.control</span>
       </div>
 
-      {/* 隐藏的 audio 元素 */}
-      {track.src && <audio ref={audioRef} src={track.src} preload="none" />}
-    </GlassCard>
+      {!track ? (
+        <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+          🎵 暂无音乐
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center gap-4">
+          {/* 黑胶唱片旋转封面 */}
+          <div className="relative shrink-0">
+            <motion.div
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden shadow-lg border-2 border-white/30"
+              animate={{ rotate: isPlaying ? 360 : 0 }}
+              transition={{
+                duration: 8,
+                repeat: isPlaying ? Infinity : 0,
+                ease: "linear",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={track.cover}
+                alt={track.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              {/* 黑胶中心孔 */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-5 h-5 rounded-full bg-black/20 border-2 border-white/30" />
+              </div>
+            </motion.div>
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 -z-10" />
+          </div>
+
+          {/* 歌曲信息 + 进度 + 波形 */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div>
+              <div className="text-gray-800 font-semibold text-sm truncate">
+                {track.title}
+              </div>
+              <div className="text-gray-500 text-xs">{track.artist}</div>
+            </div>
+
+            {/* 进度条 */}
+            <div
+              ref={progressRef}
+              className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden cursor-pointer group"
+              onClick={handleProgressClick}
+            >
+              <div
+                className="h-full bg-gradient-to-r from-purple-400 to-pink-400 rounded-full transition-all duration-150 relative"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+
+            {/* 时间 */}
+            <div className="flex justify-between text-[10px] text-gray-400 tabular-nums">
+              <span>{currentTime}</span>
+              <span>{duration}</span>
+            </div>
+
+            {/* 波形 + 控制按钮 */}
+            <div className="flex items-center gap-3">
+              {/* 波形 */}
+              <div className="flex items-end gap-[2px] h-5 flex-1">
+                {[18, 22, 14, 20, 16, 24, 12, 20, 18, 14, 22, 16].map((peak, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-[2px] bg-gradient-to-t from-purple-400/80 to-pink-400/80 rounded-full"
+                    animate={
+                      isPlaying
+                        ? { height: [3, peak, 5, peak - 4, 3] }
+                        : { height: 3 }
+                    }
+                    transition={
+                      isPlaying
+                        ? {
+                            duration: 0.8 + i * 0.05,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut",
+                            delay: i * 0.06,
+                          }
+                        : { duration: 0.3 }
+                    }
+                  />
+                ))}
+              </div>
+
+              {/* 控制按钮 */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button onClick={handlePrev} className="text-gray-400 hover:text-gray-700 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
+                </button>
+                <button
+                  onClick={handlePlayPause}
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 flex items-center justify-center transition-all shadow-md"
+                >
+                  {isPlaying ? (
+                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                  )}
+                </button>
+                <button onClick={handleNext} className="text-gray-400 hover:text-gray-700 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {track?.src && <audio ref={audioRef} src={track.src} preload="none" />}
+    </div>
   );
 }

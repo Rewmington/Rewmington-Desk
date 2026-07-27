@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useStaging } from "@/hooks/useStaging";
 import type { ContentType, StagingItem } from "@/types";
 
@@ -53,7 +54,6 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
 
   if (!isOpen) return null;
 
-  // 刷新数据
   const grouped = items.reduce(
     (acc, item) => {
       if (!acc[item.type]) acc[item.type] = [];
@@ -65,16 +65,16 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
 
   const hasItems = items.length > 0;
 
-  return (
+  const content = (
     <>
       {/* 遮罩层 */}
       <div
-        className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* 侧边抽屉 */}
-      <div className="fixed top-0 right-0 z-[60] h-full w-[400px] max-w-[90vw] bg-white/40 glass-backdrop border-l border-white/30 shadow-xl shadow-black/5 animate-slide-in-right flex flex-col">
+      <div className="fixed top-0 right-0 z-[101] h-full w-[400px] max-w-[90vw] bg-white/40 glass-backdrop border-l border-white/30 shadow-xl shadow-black/5 animate-slide-in-right flex flex-col">
         {/* 标题栏 */}
         <div className="flex items-center justify-between p-6 border-b border-white/20">
           <h2 className="text-lg font-bold text-gray-800">📦 暂存数据管理</h2>
@@ -207,11 +207,13 @@ export default function DataManager({ isOpen, onClose }: DataManagerProps) {
               导出数据 (JSON)
             </button>
             <p className="text-xs text-gray-400 text-center mt-2">
-              导出后请将文件放到项目根目录，然后告诉 Claude 进行固化
+              导出后请将文件放到项目根目录，然后手动将数据写入源码常量
             </p>
           </div>
         )}
       </div>
     </>
   );
+
+  return createPortal(content, document.body);
 }

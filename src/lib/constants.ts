@@ -21,16 +21,20 @@ export const techBadges = [
 
 export const projects: Project[] = [
   {
-    name: "MyBlog",
-    description: "基于 Next.js 16 的个人主页，毛玻璃拟态设计 + Bento Grid 布局",
+    name: "Rewmington Desk",
+    description: "基于 Next.js 16 的个人工作台，毛玻璃拟态设计 + Bento Grid 布局",
     tags: ["Next.js", "React", "Tailwind CSS"],
-    url: "https://github.com/Rewmington/MyBlog",
+    url: "https://github.com/Rewmington/Rewmington-Desk",
+    progress: 75,
+    status: "编码中",
   },
   {
-    name: "更多项目",
-    description: "即将添加更多项目展示...",
-    tags: ["Coming Soon"],
+    name: "AI Workbench",
+    description: "个人 AI 工具集合，集成多种 LLM 接口与工作流编排",
+    tags: ["Python", "FastAPI", "Vue"],
     url: "",
+    progress: 30,
+    status: "规划中",
   },
 ];
 

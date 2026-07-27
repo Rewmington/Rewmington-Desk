@@ -25,5 +25,8 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code skills (not part of the project)
+# dev tools (not part of the project)
 .claude/
+CLAUDE.md
+AGENTS.md
+docx/

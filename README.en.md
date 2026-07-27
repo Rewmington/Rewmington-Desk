@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Framer_Motion-12-FF0055?style=flat-square" alt="Framer Motion" />
 </p>
 
-# MyBlog — Rewmington's Personal Homepage
+# Rewmington Desk — Rewmington's Personal Workspace
 
 A modern personal homepage built with Next.js 16, featuring a Glassmorphism design style, Bento Grid layout, and rich interactive animations.
 
@@ -71,8 +71,8 @@ src/
 
 ```bash
 # Clone the repository
-git clone https://github.com/StanleyWong-sys/个人网页.git
-cd 个人网页
+git clone https://github.com/Rewmington/Rewmington-Desk.git
+cd Rewmington-Desk
 
 # Install dependencies
 npm install

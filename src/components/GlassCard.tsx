@@ -16,7 +16,7 @@ interface GlassCardProps {
 function SpotlightOverlay({ spotlightStyle }: { spotlightStyle: MotionValue<string> }) {
   return (
     <motion.div
-      className="absolute inset-0 pointer-events-none z-20 rounded-[24px]"
+      className="absolute inset-0 pointer-events-none z-20 rounded-3xl"
       style={{ background: spotlightStyle }}
     />
   );
@@ -38,8 +38,8 @@ export default function GlassCard({
   };
 
   const baseClasses = variant === "transparent"
-    ? "relative overflow-hidden bg-white/10 glass-backdrop border border-white/20 rounded-[24px] shadow-lg shadow-black/5"
-    : "relative overflow-hidden bg-white/40 glass-backdrop border border-white/30 rounded-[24px] shadow-lg shadow-black/5";
+    ? "relative overflow-hidden bg-white/20 backdrop-blur-xl border border-white/50 rounded-3xl shadow-lg shadow-black/5"
+    : "relative overflow-hidden bg-white/30 backdrop-blur-xl border border-white/50 rounded-3xl shadow-lg shadow-black/5";
 
   if (!enableTilt) {
     return (

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ContentType, StagingItem, ExportFile } from "@/types";
 
-const STORAGE_KEY = "myblog-staging-items";
+const STORAGE_KEY = "desk-staging-items";
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -81,7 +81,7 @@ export function useStaging() {
     return {
       version: 1,
       exportedAt: new Date().toISOString(),
-      source: "myblog-staging",
+      source: "desk-staging",
       items: current.map(({ type, data }) => ({ type, data })),
     };
   }, []);
@@ -94,7 +94,7 @@ export function useStaging() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `myblog-pending-${Date.now()}.json`;
+    a.download = `desk-pending-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

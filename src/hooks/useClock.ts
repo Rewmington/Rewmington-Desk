@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 export function useClock(): string {
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState<string | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -19,5 +19,5 @@ export function useClock(): string {
     return () => clearInterval(interval);
   }, []);
 
-  return time;
+  return time ?? "--:--:--";
 }

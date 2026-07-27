@@ -2,7 +2,7 @@
 
 ## 概述
 
-MyBlogs 是纯静态导出站点，没有后端。暂存系统允许用户在网页上添加内容，导出 JSON 文件后，由 Claude 读取并写入源码，重新构建后固化到网页。
+Rewmington Desk 是纯静态导出站点，没有后端。暂存系统允许用户在网页上添加内容，导出 JSON 文件后，手动读取并写入源码，重新构建后固化到网页。
 
 ## 工作流
 
@@ -10,13 +10,13 @@ MyBlogs 是纯静态导出站点，没有后端。暂存系统允许用户在网
 1. 用户在网页点击 "+" → 填写表单 → 暂存到 localStorage
 2. 用户点击导航栏数据管理图标 → 导出 JSON 文件下载
 3. 用户把 JSON 文件放到项目根目录
-4. 告诉 Claude："请固化暂存数据"
-5. Claude 读取 JSON → 解析 items → 写入源码常量 → 构建部署
+4. 手动固化暂存数据
+5. 读取 JSON → 解析 items → 写入源码常量 → 构建部署
 ```
 
 ## JSON 文件格式
 
-导出文件名：`myblog-pending-{timestamp}.json`
+导出文件名：`desk-pending-{timestamp}.json`
 
 ```json
 {
@@ -58,9 +58,9 @@ MyBlogs 是纯静态导出站点，没有后端。暂存系统允许用户在网
 | `music` | `src/lib/constants.ts` | `musicTracks: MusicTrack[]` | `MusicTrack` |
 | `photo` | `src/lib/constants.ts` | `photos: Photo[]` | `Photo` |
 
-## Claude 固化步骤
+## 数据固化步骤
 
-1. 读取项目根目录下的 `myblog-pending-*.json` 文件
+1. 读取项目根目录下的 `desk-pending-*.json` 文件
 2. 解析 `items` 数组
 3. 按 `type` 分组
 4. 对每个 item：

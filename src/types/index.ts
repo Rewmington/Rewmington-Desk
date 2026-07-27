@@ -35,6 +35,8 @@ export interface Project {
   description: string;
   tags: string[];
   url: string;
+  progress: number; // 0-100
+  status: "编码中" | "规划中" | "已完成" | "测试中";
 }
 
 export interface Friend {
@@ -65,6 +67,6 @@ export interface StagingItem {
 export interface ExportFile {
   version: number;
   exportedAt: string;
-  source: "myblog-staging";
+  source: "desk-staging";
   items: Array<{ type: ContentType; data: Record<string, unknown> }>;
 }

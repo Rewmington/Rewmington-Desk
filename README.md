@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Framer_Motion-12-FF0055?style=flat-square" alt="Framer Motion" />
 </p>
 
-# MyBlog — Rewmington 的个人主页
+# Rewmington Desk — Rewmington 的个人工作台
 
 一个基于 Next.js 16 的现代个人主页，采用毛玻璃拟态（Glassmorphism）设计风格，搭配 Bento Grid 布局和丰富的交互动画。
 
@@ -71,8 +71,8 @@ src/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/StanleyWong-sys/个人网页.git
-cd 个人网页
+git clone https://github.com/Rewmington/Rewmington-Desk.git
+cd Rewmington-Desk
 
 # 安装依赖
 npm install
