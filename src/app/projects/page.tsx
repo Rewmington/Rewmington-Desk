@@ -6,7 +6,6 @@ import {
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { projects } from "@/lib/constants";
-import AddButton from "@/components/staging/AddButton";
 
 export default function ProjectsPage() {
   return (
@@ -65,8 +64,6 @@ export default function ProjectsPage() {
           ))}
         </div>
       </StaggerContainer>
-
-      <AddButton contentType="project" />
     </main>
   );
 }

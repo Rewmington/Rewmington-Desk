@@ -48,14 +48,20 @@ src/
 │   ├── MusicPlayer.tsx     # 音乐播放器
 │   ├── ProfileCard.tsx     # 个人信息卡
 │   ├── SakuraBackground.tsx # 樱花飘落背景
-│   ├── SearchBar.tsx       # 搜索栏
 │   └── StatusBar.tsx       # 底部状态栏
+├── content/                # ← 改内容就来这里，JSON 可在 GitHub 网页直接编辑
+│   ├── profile.json        # 昵称、简介、头像
+│   ├── articles.json       # 文章
+│   ├── projects.json       # 项目
+│   ├── photos.json         # 照片
+│   ├── friends.json        # 友链
+│   └── music.json          # 音乐
 ├── hooks/
 │   ├── useClock.ts         # 时钟 Hook
 │   ├── useSpotlight.ts     # 聚光灯效果 Hook
 │   └── useTiltEffect.ts    # 3D 倾斜效果 Hook
 ├── lib/
-│   └── constants.ts        # 文章、音乐、技术徽章数据
+│   └── constants.ts        # 读取 content/*.json，字段写错时构建期报错
 └── types/
     └── index.ts            # TypeScript 类型定义
 ```

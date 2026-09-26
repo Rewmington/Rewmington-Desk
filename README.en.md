@@ -48,14 +48,20 @@ src/
 │   ├── MusicPlayer.tsx     # Music player
 │   ├── ProfileCard.tsx     # Profile information card
 │   ├── SakuraBackground.tsx # Sakura falling background
-│   ├── SearchBar.tsx       # Search bar
 │   └── StatusBar.tsx       # Bottom status bar
+├── content/                # ← Edit these to change site content (JSON, editable in the GitHub web UI)
+│   ├── profile.json        # Name, bio, avatar
+│   ├── articles.json       # Articles
+│   ├── projects.json       # Projects
+│   ├── photos.json         # Photos
+│   ├── friends.json        # Friends / blogroll
+│   └── music.json          # Music tracks
 ├── hooks/
 │   ├── useClock.ts         # Clock hook
 │   ├── useSpotlight.ts     # Spotlight effect hook
 │   └── useTiltEffect.ts    # 3D tilt effect hook
 ├── lib/
-│   └── constants.ts        # Articles, music, and tech badge data
+│   └── constants.ts        # Loads content/*.json, fails the build on bad fields
 └── types/
     └── index.ts            # TypeScript type definitions
 ```

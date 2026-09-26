@@ -5,7 +5,6 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-import AddButton from "@/components/staging/AddButton";
 
 export default function MusicPage() {
   return (
@@ -28,8 +27,6 @@ export default function MusicPage() {
           <MusicPlayer />
         </StaggerItem>
       </StaggerContainer>
-
-      <AddButton contentType="music" />
     </main>
   );
 }

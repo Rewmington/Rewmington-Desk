@@ -12,7 +12,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-import { photos } from "@/lib/constants";
+import { photos, articles, projects, musicTracks } from "@/lib/constants";
 import type { Photo } from "@/types";
 
 export default function Home() {
@@ -48,24 +48,20 @@ export default function Home() {
             <PhotoCarousel onPhotoClick={(photo) => setLightboxPhoto(photo)} />
           </StaggerItem>
 
-          {/* 快捷信息卡 - 1x1 */}
           <StaggerItem className="md:col-span-1">
-            <QuickStat icon="📝" label="文章" value="0" color="from-[var(--accent-secondary)] to-[var(--accent-primary)]" />
+            <QuickStat icon="📝" label="文章" value={articles.length} color="from-[var(--accent-secondary)] to-[var(--accent-primary)]" />
           </StaggerItem>
 
-          {/* 快捷信息卡 - 1x1 */}
           <StaggerItem className="md:col-span-1">
-            <QuickStat icon="📸" label="照片" value="2" color="from-[var(--accent-primary)] to-[var(--accent-secondary)]" />
+            <QuickStat icon="📸" label="照片" value={photos.length} color="from-[var(--accent-primary)] to-[var(--accent-secondary)]" />
           </StaggerItem>
 
-          {/* 快捷信息卡 - 1x1 */}
           <StaggerItem className="md:col-span-1">
-            <QuickStat icon="💻" label="项目" value="2" color="from-[var(--accent-tertiary)] to-[var(--accent-secondary)]" />
+            <QuickStat icon="💻" label="项目" value={projects.length} color="from-[var(--accent-tertiary)] to-[var(--accent-secondary)]" />
           </StaggerItem>
 
-          {/* 快捷信息卡 - 1x1 */}
           <StaggerItem className="md:col-span-1">
-            <QuickStat icon="🎵" label="音乐" value="0" color="from-[var(--accent-secondary)] to-[var(--accent-tertiary)]" />
+            <QuickStat icon="🎵" label="音乐" value={musicTracks.length} color="from-[var(--accent-secondary)] to-[var(--accent-tertiary)]" />
           </StaggerItem>
 
           {/* 底部状态栏 - 整行 */}
@@ -95,7 +91,7 @@ function QuickStat({
 }: {
   icon: string;
   label: string;
-  value: string;
+  value: number;
   color: string;
 }) {
   return (

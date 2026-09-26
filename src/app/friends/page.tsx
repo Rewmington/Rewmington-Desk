@@ -6,7 +6,6 @@ import {
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { friends } from "@/lib/constants";
-import AddButton from "@/components/staging/AddButton";
 
 export default function FriendsPage() {
   return (
@@ -47,8 +46,6 @@ export default function FriendsPage() {
           ))}
         </div>
       </StaggerContainer>
-
-      <AddButton contentType="friend" />
     </main>
   );
 }

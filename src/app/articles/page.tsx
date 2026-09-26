@@ -7,7 +7,6 @@ import {
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { articles } from "@/lib/constants";
-import AddButton from "@/components/staging/AddButton";
 
 export default function ArticlesPage() {
   return (
@@ -33,7 +32,7 @@ export default function ArticlesPage() {
                 还没有文章
               </h3>
               <p className="text-[var(--text-tertiary)] text-sm">
-                点击右下角 + 按钮添加第一篇文章
+                编辑 src/content/articles.json 添加第一篇文章
               </p>
             </GlassCard>
           </StaggerItem>
@@ -50,8 +49,6 @@ export default function ArticlesPage() {
           </div>
         )}
       </StaggerContainer>
-
-      <AddButton contentType="article" />
     </main>
   );
 }

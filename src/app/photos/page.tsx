@@ -8,7 +8,6 @@ import {
   StaggerItem,
 } from "@/components/AnimatedEntry";
 import { photos } from "@/lib/constants";
-import AddButton from "@/components/staging/AddButton";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import type { Photo } from "@/types";
 
@@ -42,7 +41,7 @@ export default function PhotosPage() {
                 正在整理照片，敬请期待...
               </p>
               <p className="text-[var(--text-tertiary)] text-xs mt-2">
-                点击右下角 + 按钮添加照片
+                图片放进 public/images，再登记到 src/content/photos.json
               </p>
             </GlassCard>
           </StaggerItem>
@@ -51,7 +50,7 @@ export default function PhotosPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {photos.map((photo) => (
               <StaggerItem key={photo.id}>
-                <GlassCard variant="transparent" className="overflow-hidden group cursor-pointer" onClick={() => setLightbox(photo)}>
+                <GlassCard className="overflow-hidden group cursor-pointer" onClick={() => setLightbox(photo)}>
                   <div className="relative aspect-square">
                     <motion.img
                       layoutId={`photo-${photo.id}`}
@@ -87,8 +86,6 @@ export default function PhotosPage() {
           </div>
         )}
       </StaggerContainer>
-
-      <AddButton contentType="photo" />
 
       {/* Lightbox 放大查看 */}
       <PhotoLightbox

@@ -9,7 +9,6 @@ interface GlassCardProps {
   children: ReactNode;
   className?: string;
   enableTilt?: boolean;
-  variant?: "light" | "transparent";
   onClick?: () => void;
 }
 
@@ -26,7 +25,6 @@ export default function GlassCard({
   children,
   className = "",
   enableTilt = true,
-  variant = "light",
   onClick,
 }: GlassCardProps) {
   const { rotateX, rotateY, handleMouseMove: tiltMouseMove, handleMouseLeave } = useTiltEffect(10);

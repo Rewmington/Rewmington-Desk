@@ -9,7 +9,6 @@ export default function ArticleCard({ article }: { article: Article }) {
 
   return (
     <GlassCard
-      variant="transparent"
       className={`h-full group ${isImage ? "min-h-[280px]" : "min-h-[200px]"}`}
     >
       <div
@@ -19,7 +18,6 @@ export default function ArticleCard({ article }: { article: Article }) {
       >
         {/* 背景图片层 - 悬停放大 */}
         <div className="absolute inset-0 rounded-[24px] overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <motion.img
             src={article.cover}
             alt=""

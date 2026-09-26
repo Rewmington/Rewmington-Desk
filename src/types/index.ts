@@ -1,3 +1,6 @@
+export const ARTICLE_VARIANTS = ["image", "text-overlay"] as const;
+export type ArticleVariant = (typeof ARTICLE_VARIANTS)[number];
+
 export interface Article {
   id: string;
   title: string;
@@ -5,7 +8,7 @@ export interface Article {
   cover: string;
   date: string;
   tags: string[];
-  variant: "image" | "text-overlay";
+  variant: ArticleVariant;
 }
 
 export interface MusicTrack {
@@ -26,9 +29,11 @@ export interface SiteConfig {
   authorName: string;
   bio: string;
   avatarUrl: string;
-  buildDate: string; // ISO date string
   socials: SocialLink[];
 }
+
+export const PROJECT_STATUSES = ["编码中", "规划中", "已完成", "测试中"] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export interface Project {
   name: string;
@@ -36,7 +41,7 @@ export interface Project {
   tags: string[];
   url: string;
   progress: number; // 0-100
-  status: "编码中" | "规划中" | "已完成" | "测试中";
+  status: ProjectStatus;
 }
 
 export interface Friend {
@@ -52,21 +57,4 @@ export interface Photo {
   caption: string;
   date: string;
   location: string;
-}
-
-// 暂存系统类型
-export type ContentType = "article" | "project" | "friend" | "music" | "photo";
-
-export interface StagingItem {
-  id: string;
-  type: ContentType;
-  data: Record<string, unknown>;
-  stagedAt: string;
-}
-
-export interface ExportFile {
-  version: number;
-  exportedAt: string;
-  source: "desk-staging";
-  items: Array<{ type: ContentType; data: Record<string, unknown> }>;
 }

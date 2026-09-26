@@ -1,10 +1,10 @@
 import type { SiteConfig } from "@/types";
+import profile from "@/content/profile.json";
 
 const siteConfig: SiteConfig = {
-  authorName: "Rewmington",
-  bio: "个人简介待完善",
-  avatarUrl: "/avatar.jpg",
-  buildDate: "2025-07-14T00:00:00.000Z",
+  authorName: profile.authorName,
+  bio: profile.bio,
+  avatarUrl: profile.avatarUrl,
   socials: [
     {
       name: "GitHub",

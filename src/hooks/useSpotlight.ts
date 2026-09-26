@@ -1,6 +1,6 @@
 "use client";
 
-import { useMotionValue, useTransform, useMotionTemplate } from "framer-motion";
+import { useMotionValue, useMotionTemplate } from "framer-motion";
 import { useCallback } from "react";
 
 interface SpotlightValues {

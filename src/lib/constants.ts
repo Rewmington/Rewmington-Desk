@@ -1,8 +1,39 @@
 import type { Article, MusicTrack, Project, Friend, Photo } from "@/types";
+import { ARTICLE_VARIANTS, PROJECT_STATUSES } from "@/types";
+import articlesData from "@/content/articles.json";
+import musicData from "@/content/music.json";
+import projectsData from "@/content/projects.json";
+import photosData from "@/content/photos.json";
+import friendsData from "@/content/friends.json";
 
-export const articles: Article[] = [];
+// 这些 JSON 是在 GitHub 网页上手改的，没有类型检查兜底。这两个字段写错只会让界面
+// 静默降级（状态点变灰、卡片版式错乱），所以在构建期直接报错。
+function assertAllowed(
+  field: string,
+  file: string,
+  allowed: readonly string[],
+  items: unknown[],
+) {
+  items.forEach((item, i) => {
+    const value = (item as Record<string, unknown>)[field];
+    if (!allowed.includes(value as string)) {
+      throw new Error(
+        `src/content/${file} 第 ${i + 1} 项的 ${field} 是 ${JSON.stringify(
+          value,
+        )}，只能是：${allowed.join(" / ")}`,
+      );
+    }
+  });
+}
 
-export const musicTracks: MusicTrack[] = [];
+assertAllowed("variant", "articles.json", ARTICLE_VARIANTS, articlesData);
+assertAllowed("status", "projects.json", PROJECT_STATUSES, projectsData);
+
+export const articles = articlesData as Article[];
+export const musicTracks = musicData as MusicTrack[];
+export const projects = projectsData as Project[];
+export const photos = photosData as Photo[];
+export const friends = friendsData as Friend[];
 
 export const techBadges = [
   {
@@ -19,47 +50,3 @@ export const techBadges = [
   },
 ];
 
-export const projects: Project[] = [
-  {
-    name: "Rewmington Desk",
-    description: "基于 Next.js 16 的个人工作台，毛玻璃拟态设计 + Bento Grid 布局",
-    tags: ["Next.js", "React", "Tailwind CSS"],
-    url: "https://github.com/Rewmington/Rewmington-Desk",
-    progress: 75,
-    status: "编码中",
-  },
-  {
-    name: "AI Workbench",
-    description: "个人 AI 工具集合，集成多种 LLM 接口与工作流编排",
-    tags: ["Python", "FastAPI", "Vue"],
-    url: "",
-    progress: 30,
-    status: "规划中",
-  },
-];
-
-export const friends: Friend[] = [
-  {
-    name: "添加友链",
-    url: "",
-    avatar: "➕",
-    bio: "欢迎交换友链，请在关于页联系我",
-  },
-];
-
-export const photos: Photo[] = [
-  {
-    id: "1",
-    src: "/images/posts/qiong-portrait.jpg",
-    caption: "穹大头照",
-    date: "2026-07-14",
-    location: "",
-  },
-  {
-    id: "2",
-    src: "/images/posts/anime-bg-1.png",
-    caption: "动漫背景1",
-    date: "2026-07-14",
-    location: "",
-  },
-];
