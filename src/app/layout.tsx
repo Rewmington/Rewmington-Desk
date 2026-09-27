@@ -4,6 +4,7 @@ import "./globals.css";
 import SakuraBackground from "@/components/SakuraBackground";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import DataMeter from "@/components/DataMeter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,8 @@ export default function RootLayout({
           {/* 内容 */}
           <div className="relative z-20 flex-1 pt-14">{children}</div>
         </ThemeProvider>
+
+        <DataMeter />
       </body>
     </html>
   );
