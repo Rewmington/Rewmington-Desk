@@ -18,6 +18,7 @@ const SCHEMA = {
     label: "文章",
     file: "articles.json",
     id: true,
+    labelField: "title",
     fields: [
       ["title", "标题", "text"],
       ["description", "摘要", "textarea"],
@@ -30,6 +31,7 @@ const SCHEMA = {
   projects: {
     label: "项目",
     file: "projects.json",
+    labelField: "name",
     fields: [
       ["name", "名称", "text"],
       ["description", "简介", "textarea"],
@@ -43,6 +45,7 @@ const SCHEMA = {
     label: "照片",
     file: "photos.json",
     id: true,
+    labelField: "src",
     fields: [
       ["src", "图片", "image"],
       ["caption", "说明", "text"],
@@ -53,6 +56,7 @@ const SCHEMA = {
   friends: {
     label: "友链",
     file: "friends.json",
+    labelField: "name",
     fields: [
       ["name", "名称", "text"],
       ["url", "链接", "text"],
@@ -64,6 +68,7 @@ const SCHEMA = {
     label: "音乐",
     file: "music.json",
     id: true,
+    labelField: "title",
     fields: [
       ["title", "曲名", "text"],
       ["artist", "作者", "text"],
@@ -89,6 +94,11 @@ function validate(key, items) {
       if (value === undefined || value === null) {
         errors.push(`${schema.label} 第 ${i + 1} 项缺少「${label}」字段`);
         continue;
+      }
+      // 点了「新增」却没填就保存，会在页面上留下一张什么都没有的卡片，
+      // 而且照片/头像的 src 为空还是张破图。标识字段必须有内容。
+      if (field === schema.labelField && !String(value).trim()) {
+        errors.push(`${schema.label} 第 ${i + 1} 项是空的（「${label}」没填），要么填完再保存，要么直接删掉这一项`);
       }
       if (kind === "number" && (!Number.isFinite(value) || value < 0 || value > 100)) {
         errors.push(`${schema.label} 第 ${i + 1} 项「${label}」必须是 0-100 的数字`);
