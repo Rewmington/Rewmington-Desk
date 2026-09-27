@@ -108,20 +108,79 @@
     </div>
 
     <script>
-      const S = { schema: {}, keys: [], data: {}, tab: "articles", dirty: false };
+      // 同一个页面服务两个后端：本地 npm run studio 直读文件系统；线上 /admin 走 Worker 提交到 GitHub。
+      const REMOTE = location.pathname.startsWith("/admin");
+      const API = REMOTE ? "/admin/api" : "/api";
+
+      const S = { schema: {}, keys: [], data: {}, tab: "articles", dirty: false, images: {}, previews: {} };
 
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+      // 图片字段里存 @pending:<token>，真实文件名由服务端决定后再替换，UI 不复制那份清理逻辑。
+      const previewOf = (src) => S.previews[src] || src;
+
       async function api(path, body) {
-        const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
+        const r = await fetch(API + path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
         const j = await r.json().catch(() => ({}));
+        if (r.status === 401 && j.needLogin) {
+          showLogin();
+          const e = new Error("未登录");
+          e.handled = true;
+          throw e;
+        }
         if (!r.ok) {
           const e = new Error((j.errors || [j.error || String(r.status)])[0]);
           e.errors = j.errors || [j.error || String(r.status)];
           throw e;
         }
         return j;
+      }
+
+      function showLogin() {
+        if ($("login")) return;
+        document.body.insertAdjacentHTML(
+          "afterbegin",
+          `<div id="login" style="position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center">
+            <form onsubmit="doLogin(event)" style="width:280px">
+              <h1 style="font-size:14px;color:var(--dim);margin:0 0 10px">内容后台 · ${esc(location.hostname)}</h1>
+              <input type="password" id="pw" placeholder="后台密码" autocomplete="current-password" style="width:100%" />
+              <button class="act primary" style="width:100%;margin-top:10px">登录</button>
+              <div id="loginErr" class="hint" style="margin-top:8px;color:#ff9c9c"></div>
+            </form>
+          </div>`
+        );
+        $("pw").focus();
+      }
+
+      async function doLogin(e) {
+        e.preventDefault();
+        try {
+          await fetch(`${API}/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: $("pw").value }) })
+            .then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error((j.errors || ["登录失败"])[0]); return j; });
+          $("login").remove();
+          await load();
+        } catch (e2) {
+          $("loginErr").textContent = e2.message;
+        }
+      }
+
+      // Worker 上跑不了 sharp，压缩只能在浏览器里做：缩放 + 重编码后交给服务端。
+      async function compressInBrowser(file, max) {
+        const bitmap = await createImageBitmap(file);
+        const scale = Math.min(1, max / bitmap.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise((res) => canvas.toBlob((b) => res(b), "image/jpeg", 0.82));
+        const base64 = await new Promise((res) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(",")[1]);
+          r.readAsDataURL(blob);
+        });
+        return { base64, from: file.size, to: blob.size };
       }
 
       function showErrors(list) {
@@ -147,9 +206,10 @@
         if (kind === "number") return `<label class="f"><span>${esc(label)}</span><input type="number" min="0" max="100" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
         if (kind === "date") return `<label class="f"><span>${esc(label)}</span><input type="date" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
         if (kind === "image") {
+          const shown = previewOf(value);
           return `<label class="f"><span>${esc(label)}</span><div class="img">
-            <img class="prev" src="${esc(value)}" onerror="this.style.opacity=.2" />
-            <div class="path">${esc(value || "（未选择）")}</div>
+            <img class="prev" src="${esc(shown)}" onerror="this.style.opacity=.2" />
+            <div class="path">${esc(String(value || "（未选择）").replace(/^@pending:[0-9a-z]+/, "待上传（保存时提交）"))}</div>
             <button class="act" onclick="pickImage('${key}',${idx},'${name}')">换图</button>
             <input type="file" accept="image/*" id="${id}-file" onchange="uploadImage('${key}',${idx},'${name}',this)" />
           </div></label>`;
@@ -181,22 +241,30 @@
       async function uploadImage(key, idx, name, input) {
         const file = input.files[0];
         if (!file) return;
-        setStatus(`上传 ${file.name}…`);
-        const b64 = await new Promise((res) => {
-          const r = new FileReader();
-          r.onload = () => res(r.result.split(",")[1]);
-          r.readAsDataURL(file);
-        });
+        const isAvatar = key === "profile" || name === "avatar";
         try {
-          const out = await api("/api/image", {
-            name: file.name,
-            dataBase64: b64,
-            kind: key === "profile" ? "avatar" : "photo",
-          });
-          S.dirty = true;
-          getItem(key, idx)[name] = out.src;
+          if (REMOTE) {
+            setStatus(`压缩 ${file.name}…`);
+            const { base64, from, to } = await compressInBrowser(file, isAvatar ? 512 : 1600);
+            const token = Math.random().toString(36).slice(2, 10);
+            const src = `@pending:${token}`;
+            S.images[token] = { token, name: file.name, dataBase64: base64 };
+            S.previews[src] = URL.createObjectURL(new Blob([file], { type: file.type }));
+            getItem(key, idx)[name] = src;
+            S.dirty = true;
+            setStatus(`${file.name} 已在本地压到 ${(to / 1024).toFixed(0)} KB（原 ${(from / 1024).toFixed(0)} KB），保存时一并提交`);
+          } else {
+            const b64 = await new Promise((res) => {
+              const r = new FileReader();
+              r.onload = () => res(r.result.split(",")[1]);
+              r.readAsDataURL(file);
+            });
+            const out = await api("/image", { name: file.name, dataBase64: b64, kind: isAvatar ? "avatar" : "photo" });
+            getItem(key, idx)[name] = out.src;
+            S.dirty = true;
+            setStatus(`${out.filename} · ${(out.bytes / 1024).toFixed(0)} KB · ${out.note}`);
+          }
           showErrors([]);
-          setStatus(`${out.filename} · ${(out.bytes / 1024).toFixed(0)} KB · ${out.note}`);
           render();
         } catch (e) {
           showErrors([`图片处理失败：${e.message}`]);
@@ -303,14 +371,29 @@
 
       async function save() {
         showErrors([]);
+        const images = Object.values(S.images);
+        const payload = { ...S.data, allowEmpty: $("allowEmpty").checked };
+        if (REMOTE && images.length) {
+          const message = prompt(`将提交 ${images.length} 张新图和这些内容改动。\n提交说明：`, "content(admin): 更新站点内容");
+          if (message === null) return;
+          payload.images = images;
+          payload.message = message;
+        }
+        setStatus(REMOTE ? "提交到 GitHub 中…" : "写入文件中…");
         try {
-          await api("/api/content", { ...S.data, allowEmpty: $("allowEmpty").checked });
+          const out = await api("/content", payload);
+          S.images = {};
           S.dirty = false;
           $("allowEmpty").checked = false;
-          setStatus("已写入 src/content/*.json（还没提交）");
+          setStatus(
+            REMOTE
+              ? `已提交 ${String(out.sha).slice(0, 7)}，Actions 构建完就上线（约 40 秒）`
+              : "已写入 src/content/*.json（还没提交）"
+          );
           refreshStatus();
         } catch (e) {
-          showErrors(e.errors || [e.message]);
+          if (!e.handled) showErrors(e.errors || [e.message]);
+          setStatus("保存失败");
         }
       }
 
@@ -321,17 +404,27 @@
         if (message === null) return;
         setStatus("提交并推送中…");
         try {
-          const out = await api("/api/publish", { message });
+          const out = await api("/publish", { message });
           $("body").insertAdjacentHTML("afterbegin", `<pre class="log">${esc((out.steps || []).join("\n"))}</pre>`);
           setStatus(out.committed ? `已推送 ${out.committed.length} 个文件，等 GitHub Actions 构建完就上线` : "没有改动");
           refreshStatus();
         } catch (e) {
           showErrors([`发布失败：${e.message}`]);
-        }      }
+        }
+      }
+
+      const BUILD_TEXT = { in_progress: "构建中", queued: "排队中", completed: "已完成" };
 
       async function refreshStatus() {
         try {
-          const s = await api("/api/status");
+          const s = await api("/status");
+          if (REMOTE) {
+            const b = s.build;
+            $("status").innerHTML = `最近提交 ${esc(s.log)}` + (b
+              ? ` · Actions <a href="${esc(b.url)}" target="_blank" style="color:var(--accent)">${esc(BUILD_TEXT[b.status] || b.status)}${b.conclusion && b.conclusion !== "success" ? `（${esc(b.conclusion)}）` : ""}</a>`
+              : "");
+            return;
+          }
           const files = s.changed || [];
           $("status").textContent = files.length
             ? `${files.length} 个文件待提交：${files.join("、")}`
@@ -342,7 +435,7 @@
       }
 
       async function load() {
-        const [sc, data] = await Promise.all([api("/api/schema"), api("/api/content")]);
+        const [sc, data] = await Promise.all([api("/schema"), api("/content")]);
         S.schema = sc.schema;
         S.keys = sc.keys;
         S.data = data;
@@ -352,9 +445,15 @@
 
       function setStatus(t) { $("status").textContent = t; }
 
+      if (REMOTE) {
+        $("publish").remove();
+        $("save").textContent = "提交到 GitHub 并发布";
+        document.querySelector(".bar label.hint").title = "线上后台同样禁止把有数据的分类直接清空";
+      }
+
       $("save").onclick = save;
-      $("publish").onclick = publish;
-      $("reload").onclick = () => (S.dirty && !confirm("放弃未保存的修改，重新读取文件？") ? null : load());
+      if (!REMOTE) $("publish").onclick = publish;
+      $("reload").onclick = () => (S.dirty && !confirm("放弃未保存的修改，重新读取数据？") ? null : load());
       addEventListener("beforeunload", (e) => { if (S.dirty) e.preventDefault(); });
       load();
     </script>

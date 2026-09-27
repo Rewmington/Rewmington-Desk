@@ -110,6 +110,31 @@ pushes, and Actions takes it live once the build finishes.
 - Binds 127.0.0.1 only — no network exposure, no tokens
 - Editing `content/*.json` directly in GitHub's web UI still works from anywhere else
 
+### Online admin (optional, one Cloudflare deploy)
+
+To add content from a machine without this repo, deploy the same UI to
+`https://wmddd.online/admin`:
+
+```bash
+npm i -D wrangler
+npx wrangler login
+# Create a Fine-grained PAT on GitHub scoped to Contents: read+write on this repo only, then:
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ADMIN_PASSWORD
+npm run deploy:admin
+```
+
+`worker/index.js` (routed at `/admin` in `wrangler.toml`) turns a save into **one** commit via
+GitHub's Git Data API — content JSON and image blobs go into the same tree — so Actions builds
+as usual and the site stays fully static, with the build-time field validators still in force.
+
+- The page is shared with the local desk (`tools/studio/ui.html`); validation lives in `tools/studio/schema.mjs`
+- sharp can't run in a Worker, so images are compressed in the browser with canvas
+- Sessions are HMAC-signed HttpOnly cookies keyed off `ADMIN_PASSWORD`
+- **This is the only credentialed entry point on the site** — use a long random password. There is
+  no rate limiting in the Worker beyond a 600 ms delay on failed logins
+- Once deployed, the Worker owns `/admin`; every other path is untouched
+
 ### Build & Deploy
 
 ```bash

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "studio": "node tools/studio/server.mjs"
+    "studio": "node tools/studio/server.mjs",
+    "deploy:admin": "node tools/studio/prepare-assets.mjs && wrangler deploy"
   },
   "dependencies": {
     "framer-motion": "^12.42.2",

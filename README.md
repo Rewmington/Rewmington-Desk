@@ -107,6 +107,31 @@ npm run studio
 - 只监听 127.0.0.1，不联网、不需要任何 token
 - 从手机等别处改内容时，仍然可以直接在 GitHub 网页上编辑这些 JSON
 
+### 在线后台（可选，需要一次 Cloudflare 部署）
+
+不在自己电脑上也想加内容，可以把同一套界面部署成 `https://wmddd.online/admin`：
+
+```bash
+npm i -D wrangler          # 只用于部署，不进站点依赖
+npx wrangler login         # 浏览器授权你自己的 Cloudflare 账号
+# 在 GitHub 建一个 Fine-grained PAT，只给 Rewmington-Desk 这一个仓库的
+# Contents: Read and write 权限，然后：
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ADMIN_PASSWORD
+npm run deploy:admin
+```
+
+实现在 `worker/index.js`（`wrangler.toml` 里配了 `/admin` 路由）：保存时通过 GitHub 的
+Git Data API 把内容 JSON 和图片 blob 合成**一个** commit 推到 main，Actions 照常构建上线，
+所以站点仍然是纯静态的，构建期字段校验也继续生效。
+
+- 后台页面和本地发布台共用 `tools/studio/ui.html`，校验规则共用 `tools/studio/schema.mjs`
+- 线上没有 sharp，图片压缩在浏览器里用 canvas 完成
+- 会话是 HMAC 签名的 HttpOnly cookie，密钥就是 `ADMIN_PASSWORD` 本身
+- **这是全站唯一需要凭据的入口**，`ADMIN_PASSWORD` 请用长随机串；Worker 里没做限流，
+  只有失败后 600ms 延迟这一层缓解
+- 部署后 `https://wmddd.online/admin` 会由 Worker 接管，站点其余路径不受影响
+
 ### 构建与部署
 
 ```bash
