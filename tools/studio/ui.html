@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>内容发布台</title>
+    <style>
+      :root {
+        --bg: #0b0d0f;
+        --panel: #141517;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #e2e8f0;
+        --dim: #94a3b8;
+        --dimmer: #64748b;
+        --accent: #00ffa3;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.6 system-ui, "Segoe UI", sans-serif;
+        display: flex;
+        min-height: 100vh;
+      }
+      aside {
+        width: 168px;
+        flex-shrink: 0;
+        border-right: 1px solid var(--line);
+        padding: 16px 10px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      aside h1 { font-size: 13px; color: var(--dim); margin: 0 0 14px; font-weight: 600; letter-spacing: .05em; }
+      aside button {
+        display: block; width: 100%; text-align: left; margin-bottom: 4px;
+        background: none; border: 1px solid transparent; color: var(--dim);
+        padding: 7px 10px; border-radius: 8px; cursor: pointer; font: inherit;
+      }
+      aside button:hover { background: rgba(255,255,255,.05); color: var(--text); }
+      aside button.on { background: rgba(0,255,163,.1); border-color: rgba(0,255,163,.3); color: var(--accent); }
+      aside .count { color: var(--dimmer); font-size: 11px; margin-left: 4px; }
+      main { flex: 1; padding: 18px 22px 90px; max-width: 880px; }
+      .bar {
+        position: fixed; bottom: 0; left: 168px; right: 0;
+        background: rgba(11,13,15,.92); backdrop-filter: blur(12px);
+        border-top: 1px solid var(--line); padding: 10px 22px;
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap; z-index: 10;
+      }
+      .bar .status { flex: 1 1 160px; color: var(--dimmer); font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .card {
+        background: var(--panel); border: 1px solid var(--line);
+        border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;
+      }
+      .card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .card-head .idx { color: var(--dimmer); font-size: 12px; }
+      .card-head .title { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      button.act {
+        background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--dim);
+        padding: 5px 12px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px;
+        white-space: nowrap; flex-shrink: 0;
+      }
+      button.act:hover { color: var(--text); background: rgba(255,255,255,.1); }
+      button.primary { background: var(--accent); color: #04231a; border-color: transparent; font-weight: 600; }
+      button.primary:hover { background: #26ffb4; color: #04231a; }
+      button.danger:hover { color: #ff6b6b; border-color: rgba(255,107,107,.4); }
+      label.f { display: block; margin-bottom: 10px; }
+      label.f > span { display: block; color: var(--dimmer); font-size: 11px; margin-bottom: 3px; letter-spacing: .04em; }
+      input[type=text], input[type=number], input[type=date], input[type=url], textarea, select {
+        width: 100%; background: #0e0f11; border: 1px solid var(--line); color: var(--text);
+        border-radius: 7px; padding: 7px 9px; font: inherit; font-size: 13px;
+      }
+      textarea { min-height: 62px; resize: vertical; }
+      input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(0,255,163,.45); }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .img { display: flex; align-items: center; gap: 10px; }
+      .img .prev { width: 54px; height: 54px; border-radius: 8px; object-fit: cover; background: #0e0f11; border: 1px solid var(--line); flex-shrink: 0; }
+      .img .path { font-family: ui-monospace, monospace; font-size: 11px; color: var(--dim); word-break: break-all; flex: 1; }
+      .img input[type=file] { display: none; }
+      .hint { color: var(--dimmer); font-size: 12px; }
+      .errs { background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.3); color: #ffb3b3; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; }
+      .errs ul { margin: 4px 0 0; padding-left: 18px; }
+      pre.log { background: #0e0f11; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 11px; overflow: auto; max-height: 200px; white-space: pre-wrap; }
+      .empty { color: var(--dimmer); padding: 30px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; margin-bottom: 12px; }
+      h2.sec { font-size: 15px; margin: 0 0 4px; }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <h1>内容发布台</h1>
+      <div id="tabs"></div>
+    </aside>
+    <main>
+      <h2 class="sec" id="heading"></h2>
+      <p class="hint" id="sub"></p>
+      <div id="errs"></div>
+      <div id="body" style="margin-top: 14px"></div>
+    </main>
+    <div class="bar">
+      <div class="status" id="status">读取中…</div>
+      <label class="hint" style="display:flex;align-items:center;gap:4px">
+        <input type="checkbox" id="allowEmpty" /> 允许清空
+      </label>
+      <button class="act" id="reload">重载</button>
+      <button class="act primary" id="save">保存到本地文件</button>
+      <button class="act" id="publish">提交并发布</button>
+    </div>
+
+    <script>
+      const S = { schema: {}, keys: [], data: {}, tab: "articles", dirty: false };
+
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+      async function api(path, body) {
+        const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          const e = new Error((j.errors || [j.error || String(r.status)])[0]);
+          e.errors = j.errors || [j.error || String(r.status)];
+          throw e;
+        }
+        return j;
+      }
+
+      function showErrors(list) {
+        $("errs").innerHTML = list && list.length
+          ? `<div class="errs">有 ${list.length} 处问题，未写入任何文件：<ul>${list.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>`
+          : "";
+      }
+
+      function getItem(key, idx) {
+        return key === "profile" ? S.data.profile : S.data[key][idx];
+      }
+
+      function fieldInput(key, idx, field) {
+        const [name, label, kind, allowed] = field;
+        const item = getItem(key, idx);
+        const value = item[name];
+        const id = `${key}-${idx}-${name}`;
+        // 属性值本身用双引号包裹，所以内层必须用单引号，否则 oninput="onField(" 会被截断。
+        const on = key === "profile" ? `onProfile('${name}',this)` : `onField('${key}',${idx},'${name}',this)`;
+        if (kind === "textarea") return `<label class="f"><span>${esc(label)}</span><textarea id="${id}" oninput="${on}">${esc(value)}</textarea></label>`;
+        if (kind === "enum") return `<label class="f"><span>${esc(label)}</span><select id="${id}" onchange="${on}">${allowed.map((o) => `<option ${o === value ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
+        if (kind === "list") return `<label class="f"><span>${esc(label)}（用逗号分隔）</span><input type="text" id="${id}" value="${esc((value || []).join(", "))}" oninput="${on}" /></label>`;
+        if (kind === "number") return `<label class="f"><span>${esc(label)}</span><input type="number" min="0" max="100" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
+        if (kind === "date") return `<label class="f"><span>${esc(label)}</span><input type="date" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
+        if (kind === "image") {
+          return `<label class="f"><span>${esc(label)}</span><div class="img">
+            <img class="prev" src="${esc(value)}" onerror="this.style.opacity=.2" />
+            <div class="path">${esc(value || "（未选择）")}</div>
+            <button class="act" onclick="pickImage('${key}',${idx},'${name}')">换图</button>
+            <input type="file" accept="image/*" id="${id}-file" onchange="uploadImage('${key}',${idx},'${name}',this)" />
+          </div></label>`;
+        }
+        return `<label class="f"><span>${esc(label)}</span><input type="text" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
+      }
+
+      function onField(key, idx, name, el) {
+        const field = S.schema[key].fields.find((f) => f[0] === name);
+        let v = el.value;
+        if (field[2] === "list") v = v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+        if (field[2] === "number") v = Number(v);
+        S.data[key][idx][name] = v;
+        S.dirty = true;
+        if (name === "title" || name === "name") {
+          const card = el.closest(".card").querySelector(".title");
+          if (card) card.textContent = v || "（未命名）";
+        }
+        if (field[2] === "image") {
+          const prev = el.closest(".card").querySelector(".prev");
+          if (prev) prev.src = v;
+        }
+      }
+
+      function pickImage(key, idx, name) {
+        $(`${key}-${idx}-${name}-file`).click();
+      }
+
+      async function uploadImage(key, idx, name, input) {
+        const file = input.files[0];
+        if (!file) return;
+        setStatus(`上传 ${file.name}…`);
+        const b64 = await new Promise((res) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(",")[1]);
+          r.readAsDataURL(file);
+        });
+        try {
+          const out = await api("/api/image", {
+            name: file.name,
+            dataBase64: b64,
+            kind: key === "profile" ? "avatar" : "photo",
+          });
+          S.dirty = true;
+          getItem(key, idx)[name] = out.src;
+          showErrors([]);
+          setStatus(`${out.filename} · ${(out.bytes / 1024).toFixed(0)} KB · ${out.note}`);
+          render();
+        } catch (e) {
+          showErrors([`图片处理失败：${e.message}`]);
+        }
+        input.value = "";
+      }
+
+      function addItem(key) {
+        const blank = { id: Date.now().toString(36) };
+        for (const [name, , kind, allowed] of S.schema[key].fields) {
+          blank[name] = kind === "list" ? [] : kind === "number" ? 0 : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
+        }
+        S.data[key].push(blank);
+        S.dirty = true;
+        render();
+      }
+
+      function removeItem(key, idx) {
+        const item = S.data[key][idx];
+        const label = item.title || item.name || item.caption || "这一项";
+        if (!confirm(`确定删除「${label}」？保存后生效，可以用 git 恢复。`)) return;
+        S.data[key].splice(idx, 1);
+        S.dirty = true;
+        render();
+      }
+
+      function move(key, idx, dir) {
+        const to = idx + dir;
+        if (to < 0 || to >= S.data[key].length) return;
+        [S.data[key][idx], S.data[key][to]] = [S.data[key][to], S.data[key][idx]];
+        S.dirty = true;
+        render();
+      }
+
+      function render() {
+        $("tabs").innerHTML = S.keys
+          .map((k) => `<button class="${k === S.tab ? "on" : ""}" onclick="S.tab='${k}';render()">${esc(S.schema[k].label)}<span class="count">${S.data[k].length}</span></button>`)
+          .join("") +
+          `<button class="${S.tab === "profile" ? "on" : ""}" onclick="S.tab='profile';render()">个人资料</button>`;
+
+        if (S.tab === "profile") {
+          $("heading").textContent = "个人资料";
+          $("sub").textContent = "写在 src/content/profile.json；社交链接在仓库根目录 siteConfig.ts，那里含 SVG 图标，不在这里改。";
+          const p = S.data.profile;
+          $("body").innerHTML = `<div class="card">
+            ${[
+              ["authorName", "名字", "text"],
+              ["bio", "简介", "textarea"],
+              ["avatarUrl", "头像路径", "image"],
+            ].map((f) => fieldInput("profile", -1, f)).join("")}
+          </div>`;
+          return;
+        }
+
+        const key = S.tab;
+        const schema = S.schema[key];
+        $("heading").textContent = schema.label;
+        $("sub").textContent = `对应文件 src/content/${schema.file} · 共 ${S.data[key].length} 条`;
+        $("body").innerHTML =
+          (S.data[key].length
+            ? S.data[key]
+                .map((item, i) => `<div class="card">
+                  <div class="card-head">
+                    <span class="idx">#${i + 1}</span>
+                    <span class="title">${esc(item.title || item.name || item.caption || "（未命名）")}</span>
+                    <button class="act" onclick="move('${key}',${i},-1)" title="上移">↑</button>
+                    <button class="act" onclick="move('${key}',${i},1)" title="下移">↓</button>
+                    <button class="act danger" onclick="removeItem('${key}',${i})">删除</button>
+                  </div>
+                  ${grouped(key, i)}
+                </div>`)
+                .join("")
+            : `<div class="empty">还没有内容，点下面的「新增」</div>`) +
+          `<button class="act" onclick="addItem('${key}')">＋ 新增${esc(schema.label)}</button>`;
+      }
+
+      function grouped(key, i) {
+        const f = S.schema[key].fields;
+        const out = [];
+        let pair = [];
+        const flush = () => {
+          if (pair.length === 2) out.push(`<div class="row">${pair.join("")}</div>`);
+          else out.push(...pair);
+          pair = [];
+        };
+        for (const field of f) {
+          const html = fieldInput(key, i, field);
+          const wide = field[2] === "textarea" || field[2] === "image";
+          if (wide) { flush(); out.push(html); continue; }
+          pair.push(html);
+          if (pair.length === 2) flush();
+        }
+        flush();
+        return out.join("");
+      }
+
+      function onProfile(name, el) {
+        const kind = { authorName: "text", bio: "textarea", avatarUrl: "image" }[name];
+        let v = el.value;
+        if (kind === "number") v = Number(v);
+        S.data.profile[name] = v;
+        S.dirty = true;
+      }
+
+      async function save() {
+        showErrors([]);
+        try {
+          await api("/api/content", { ...S.data, allowEmpty: $("allowEmpty").checked });
+          S.dirty = false;
+          $("allowEmpty").checked = false;
+          setStatus("已写入 src/content/*.json（还没提交）");
+          refreshStatus();
+        } catch (e) {
+          showErrors(e.errors || [e.message]);
+        }
+      }
+
+      async function publish() {
+        if (S.dirty && !confirm("还有未保存的修改。先把修改写入文件？")) return;
+        if (S.dirty) await save();
+        const message = prompt("提交说明", "content: 更新站点内容");
+        if (message === null) return;
+        setStatus("提交并推送中…");
+        try {
+          const out = await api("/api/publish", { message });
+          $("body").insertAdjacentHTML("afterbegin", `<pre class="log">${esc((out.steps || []).join("\n"))}</pre>`);
+          setStatus(out.committed ? `已推送 ${out.committed.length} 个文件，等 GitHub Actions 构建完就上线` : "没有改动");
+          refreshStatus();
+        } catch (e) {
+          showErrors([`发布失败：${e.message}`]);
+        }      }
+
+      async function refreshStatus() {
+        try {
+          const s = await api("/api/status");
+          const files = s.changed || [];
+          $("status").textContent = files.length
+            ? `${files.length} 个文件待提交：${files.join("、")}`
+            : `工作区干净 · 最近提交 ${s.log}`;
+        } catch (e) {
+          $("status").textContent = `状态读取失败：${e.message}`;
+        }
+      }
+
+      async function load() {
+        const [sc, data] = await Promise.all([api("/api/schema"), api("/api/content")]);
+        S.schema = sc.schema;
+        S.keys = sc.keys;
+        S.data = data;
+        render();
+        refreshStatus();
+      }
+
+      function setStatus(t) { $("status").textContent = t; }
+
+      $("save").onclick = save;
+      $("publish").onclick = publish;
+      $("reload").onclick = () => (S.dirty && !confirm("放弃未保存的修改，重新读取文件？") ? null : load());
+      addEventListener("beforeunload", (e) => { if (S.dirty) e.preventDefault(); });
+      load();
+    </script>
+  </body>
+</html>

@@ -64,6 +64,10 @@ src/
 │   └── constants.ts        # 读取 content/*.json，字段写错时构建期报错
 └── types/
     └── index.ts            # TypeScript 类型定义
+
+tools/studio/               # npm run studio 的本地发布台（不进构建产物）
+├── server.mjs              # 读写 content/*.json、压图、commit + push
+└── ui.html                 # 填表界面
 ```
 
 ## 🚀 快速开始
@@ -89,6 +93,20 @@ npm run dev
 
 浏览器打开 [http://localhost:3000](http://localhost:3000) 即可预览。
 
+### 写内容（推荐入口）
+
+```bash
+npm run studio
+```
+
+打开 http://127.0.0.1:5178 就是一个填表式的编辑台：选分类、填字段、点「换图」选本地图片，
+保存即写入 `src/content/*.json`，点「提交并发布」自动 commit + push，等 Actions 构建完就上线。
+
+- 图片会先经 sharp 压到 1600px 宽 / q82 再落盘，避免手机原图直接进仓库把页面拖肥
+- 字段写错（比如状态不在四个候选里）会被服务端拒绝，一个文件都不写
+- 只监听 127.0.0.1，不联网、不需要任何 token
+- 从手机等别处改内容时，仍然可以直接在 GitHub 网页上编辑这些 JSON
+
 ### 构建与部署
 
 ```bash
@@ -106,6 +124,7 @@ npm run build
 | `npm run build` | 构建生产版本（静态导出） |
 | `npm run start` | 启动生产服务器 |
 | `npm run lint` | 运行 ESLint 检查 |
+| `npm run studio` | 启动本地内容发布台（http://127.0.0.1:5178） |
 
 ## 🌐 部署
 

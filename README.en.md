@@ -64,6 +64,10 @@ src/
 │   └── constants.ts        # Loads content/*.json, fails the build on bad fields
 └── types/
     └── index.ts            # TypeScript type definitions
+
+tools/studio/               # local publishing desk behind `npm run studio` (not part of the build output)
+├── server.mjs              # reads/writes content/*.json, compresses images, commits + pushes
+└── ui.html                 # the form UI
 ```
 
 ## 🚀 Getting Started
@@ -89,6 +93,23 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to preview.
 
+### Editing content (recommended entry point)
+
+```bash
+npm run studio
+```
+
+http://127.0.0.1:5178 is a form-based editor: pick a collection, fill in the fields, hit
+"换图" to choose a local image. Saving writes `src/content/*.json`; "提交并发布" commits and
+pushes, and Actions takes it live once the build finishes.
+
+- Images run through sharp at 1600px / q82 before they touch the repo, so a phone original
+  can't quietly fatten the page
+- A bad field value (a status outside the four options, progress over 100) is rejected
+  server-side and no file is written
+- Binds 127.0.0.1 only — no network exposure, no tokens
+- Editing `content/*.json` directly in GitHub's web UI still works from anywhere else
+
 ### Build & Deploy
 
 ```bash
@@ -106,6 +127,7 @@ Pushing to the `main` branch triggers GitHub Actions to automatically build and 
 | `npm run build` | Build for production (static export) |
 | `npm run start` | Start the production server |
 | `npm run lint` | Run ESLint checks |
+| `npm run studio` | Start the local content desk (http://127.0.0.1:5178) |
 
 ## 🌐 Deployment
 
