@@ -65,9 +65,14 @@ src/
 └── types/
     └── index.ts            # TypeScript type definitions
 
-tools/studio/               # local publishing desk behind `npm run studio` (not part of the build output)
-├── server.mjs              # reads/writes content/*.json, compresses images, commits + pushes
-└── ui.html                 # the form UI
+tools/
+├── publish-content.mjs     # after build, snapshot content/*.json into out/content/ for /admin
+└── studio/                 # local publishing desk behind `npm run studio` (not in the build output)
+    ├── server.mjs          # reads/writes content/*.json, compresses images, commits + pushes
+    ├── schema.mjs          # field definitions and validation, used by the local desk
+    └── ui.html             # the form UI
+
+public/admin/index.html     # online admin: static, emits paste-ready JSON, needs no credentials
 ```
 
 ## 🚀 Getting Started
@@ -110,30 +115,33 @@ pushes, and Actions takes it live once the build finishes.
 - Binds 127.0.0.1 only — no network exposure, no tokens
 - Editing `content/*.json` directly in GitHub's web UI still works from anywhere else
 
-### Online admin (optional, one Cloudflare deploy)
+### Online admin (`/admin`, zero credentials)
 
-To add content from a machine without this repo, deploy the same UI to
-`https://wmddd.online/admin`:
+When you're away from your own machine, open `https://wmddd.online/admin`. It is a **plain
+static page that writes nothing over the network** and needs no password or token:
 
-```bash
-npm i -D wrangler
-npx wrangler login
-# Create a Fine-grained PAT on GitHub scoped to Contents: read+write on this repo only, then:
-npx wrangler secret put GITHUB_TOKEN
-npx wrangler secret put ADMIN_PASSWORD
-npm run deploy:admin
-```
+1. It reads content from **same-origin** `/content/*.json` (snapshotted from
+   `src/content/*.json` at build time by `tools/publish-content.mjs`) and renders a form
+2. After editing, hit "生成提交内容" — only files that actually changed are listed, each with a
+   copy button and an "open on GitHub" link
+3. Paste → Commit → wait ~40s for Actions and it's live
 
-`worker/index.js` (routed at `/admin` in `wrangler.toml`) turns a save into **one** commit via
-GitHub's Git Data API — content JSON and image blobs go into the same tree — so Actions builds
-as usual and the site stays fully static, with the build-time field validators still in force.
+Images go through GitHub's own drag-and-drop upload page (`…/upload/main/public/images/posts/`);
+paste the resulting path back into the field.
 
-- The page is shared with the local desk (`tools/studio/ui.html`); validation lives in `tools/studio/schema.mjs`
-- sharp can't run in a Worker, so images are compressed in the browser with canvas
-- Sessions are HMAC-signed HttpOnly cookies keyed off `ADMIN_PASSWORD`
-- **This is the only credentialed entry point on the site** — use a long random password. There is
-  no rate limiting in the Worker beyond a 600 ms delay on failed logins
-- Once deployed, the Worker owns `/admin`; every other path is untouched
+**Why not make it one-click**: for a browser to commit on your behalf it must hold a credential
+that represents you — there is no exception. That token equals write access to the repo, and it
+could be exfiltrated by any third-party script the site ever loads. This design removes that whole
+class of risk in exchange for two extra pastes.
+
+Two known edges:
+
+- `/content/*.json` is a snapshot of the **last successful build** and may lag behind `main`. The
+  safety net is GitHub's edit page — it shows a diff before committing, so nothing is clobbered
+  silently
+- The form field list exists in `public/admin/index.html` as well as in `tools/studio/schema.mjs`,
+  deliberately kept in the same shape. Add a field and you touch both. The real hard validation is
+  at build time in `src/lib/constants.ts`, so a missed edit only costs you one input, not bad data
 
 ### Build & Deploy
 

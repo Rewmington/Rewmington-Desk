@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>内容后台 · Rewmington Desk</title>
+    <style>
+      :root {
+        --bg: #0b0d0f; --panel: #141517; --line: rgba(255,255,255,.1);
+        --text: #e2e8f0; --dim: #94a3b8; --dimmer: #64748b; --accent: #00ffa3;
+      }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font:14px/1.6 system-ui,"Segoe UI",sans-serif; }
+      main { max-width: 720px; margin: 0 auto; padding: 20px 16px 80px; }
+      h1 { font-size: 16px; margin: 0 0 4px; }
+      .sub { color: var(--dimmer); font-size: 12px; margin-bottom: 16px; }
+      .steps { background: var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:18px; font-size:13px; color:var(--dim); }
+      .steps b { color: var(--text); }
+      .steps ol { margin: 6px 0 0; padding-left: 20px; }
+      .steps li { margin-bottom: 3px; }
+      .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+      .tabs button { background:none; border:1px solid var(--line); color:var(--dim); padding:5px 12px; border-radius:999px; cursor:pointer; font:inherit; font-size:13px; }
+      .tabs button.on { background:rgba(0,255,163,.1); border-color:rgba(0,255,163,.35); color:var(--accent); }
+      .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+      .head { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+      .head .t { font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .head .n { color:var(--dimmer); font-size:12px; }
+      button.act { background:rgba(255,255,255,.06); border:1px solid var(--line); color:var(--dim); padding:5px 12px; border-radius:8px; cursor:pointer; font:inherit; font-size:13px; white-space:nowrap; }
+      button.act:hover { color:var(--text); background:rgba(255,255,255,.1); }
+      button.primary { background:var(--accent); color:#04231a; border-color:transparent; font-weight:600; }
+      button.primary:hover { background:#26ffb4; color:#04231a; }
+      label.f { display:block; margin-bottom:10px; }
+      label.f > span { display:block; color:var(--dimmer); font-size:11px; margin-bottom:3px; }
+      input[type=text], input[type=number], input[type=date], textarea, select {
+        width:100%; background:#0e0f11; border:1px solid var(--line); color:var(--text);
+        border-radius:7px; padding:7px 9px; font:inherit; font-size:13px; }
+      textarea { min-height:60px; resize:vertical; }
+      input:focus, textarea:focus, select:focus { outline:none; border-color:rgba(0,255,163,.45); }
+      .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .img { display:flex; gap:8px; align-items:center; }
+      .img img { width:48px; height:48px; border-radius:8px; object-fit:cover; background:#0e0f11; border:1px solid var(--line); flex-shrink:0; }
+      .hint { color:var(--dimmer); font-size:12px; }
+      .errs { background:rgba(255,107,107,.08); border:1px solid rgba(255,107,107,.3); color:#ffb3b3; padding:10px 14px; border-radius:10px; margin-bottom:12px; font-size:13px; }
+      .errs ul { margin:4px 0 0; padding-left:18px; }
+      .out { border:1px solid var(--line); border-radius:12px; margin-bottom:14px; overflow:hidden; }
+      .out > header { background:var(--panel); padding:9px 14px; display:flex; align-items:center; gap:10px; }
+      .out > header code { font-size:12px; color:var(--accent); flex:1; word-break:break-all; }
+      .out textarea { border:0; border-radius:0; font-family:ui-monospace,monospace; font-size:12px; min-height:150px; background:#0e0f11; }
+      a { color: var(--accent); }
+      .bar { position:sticky; bottom:0; background:rgba(11,13,15,.94); backdrop-filter:blur(12px); border-top:1px solid var(--line); padding:10px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+      .empty { color:var(--dimmer); padding:26px; text-align:center; border:1px dashed var(--line); border-radius:12px; margin-bottom:12px; }
+      @media (max-width:560px){ .row { grid-template-columns:1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>内容后台</h1>
+      <div class="sub" id="source">读取中…</div>
+
+      <div class="steps">
+        这个页面<b>不联网写任何东西</b>，也不需要密码或 token。它只做两件事：把内容渲染成表单，
+        以及把你改过的部分生成可以直接粘进 GitHub 的文本。
+        <ol>
+          <li>在下面改内容，点 <b>生成提交内容</b></li>
+          <li>对每个变化的文件点 <b>复制</b>，再点 <b>在 GitHub 打开</b>，全选粘贴，Commit</li>
+          <li>等约 40 秒 Actions 构建完，线上就更新了</li>
+        </ol>
+        加图片：<a id="uploadLink" href="#">到这里拖进文件</a>，上传完把它的地址填回对应字段。
+      </div>
+
+      <div id="errs"></div>
+      <div class="tabs" id="tabs"></div>
+      <div id="body"></div>
+      <div id="out"></div>
+
+      <div class="bar">
+        <button class="act primary" id="gen">生成提交内容</button>
+        <span class="hint" id="state"></span>
+      </div>
+    </main>
+
+    <script type="module">
+      const REPO = "Rewmington/Rewmington-Desk";
+      const BASE = `https://github.com/${REPO}`;
+
+      // 字段定义与 tools/studio/schema.mjs 有意保持同形。那份是本地发布台的权威定义，
+      // 这里这份只负责画表单和给提示，真正的硬校验在构建期 src/lib/constants.ts。
+      const SCHEMA = {
+        articles: { label:"文章", file:"articles.json", id:true, labelField:"title", fields:[
+          ["title","标题","text"], ["description","摘要","textarea"], ["cover","封面","image"],
+          ["date","日期","date"], ["tags","标签","list"], ["variant","版式","enum",["image","text-overlay"]]] },
+        projects: { label:"项目", file:"projects.json", labelField:"name", fields:[
+          ["name","名称","text"], ["description","简介","textarea"], ["url","链接","text"],
+          ["tags","技术栈","list"], ["progress","进度 %","number"], ["status","状态","enum",["编码中","规划中","已完成","测试中"]]] },
+        photos: { label:"照片", file:"photos.json", id:true, labelField:"src", fields:[
+          ["src","图片","image"], ["caption","说明","text"], ["date","日期","date"], ["location","地点","text"]] },
+        friends: { label:"友链", file:"friends.json", labelField:"name", fields:[
+          ["name","名称","text"], ["url","链接","text"], ["avatar","头像","image"], ["bio","介绍","textarea"]] },
+        music: { label:"音乐", file:"music.json", id:true, labelField:"title", fields:[
+          ["title","曲名","text"], ["artist","作者","text"], ["src","音频地址","text"], ["cover","封面","image"]] },
+      };
+      const KEYS = Object.keys(SCHEMA);
+      const PROFILE_FIELDS = [["authorName","名字","text"], ["bio","简介","textarea"], ["avatarUrl","头像路径","image"]];
+
+      const S = { data: {}, original: {}, tab: "articles" };
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+      // 与 tools/studio/schema.mjs 的 stringify 同规则：纯字符串数组折回一行，
+      // 否则粘进 GitHub 会把 tags 撑成一大坨 diff。
+      const text = (v) =>
+        JSON.stringify(v, null, 2)
+          .replace(/\[\s*\n((?:\s*"(?:[^"\\]|\\.)*",?\s*\n)+)\s*\]/g, (_m, inner) => {
+            const parts = inner.trim().split("\n").map((s) => s.trim().replace(/,$/, ""));
+            return `[${parts.join(", ")}]`;
+          }) + "\n";
+
+      const read = (name) =>
+        fetch(`/content/${name}.json?cb=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
+
+      async function boot() {
+        const manifest = (await read("manifest")) || { files: [...KEYS, "profile"] };
+        const loaded = {};
+        await Promise.all(
+          manifest.files.map(async (n) => {
+            const v = await read(n);
+            if (v !== null) loaded[n] = v;
+          })
+        );
+        if (!loaded.profile) loaded.profile = { authorName: "", bio: "", avatarUrl: "" };
+        for (const k of KEYS) if (!Array.isArray(loaded[k])) loaded[k] = [];
+        S.data = structuredClone(loaded);
+        S.original = loaded;
+        $("uploadLink").href = `${BASE}/upload/main/public/images/posts/`;
+        $("source").textContent = `内容来自上次成功构建的快照 · ${BASE}`;
+        render();
+      }
+
+      function showErrors(list) {
+        $("errs").innerHTML = list?.length
+          ? `<div class="errs">有 ${list.length} 处问题：<ul>${list.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>`
+          : "";
+      }
+
+      const item = (key, i) => (key === "profile" ? S.data.profile : S.data[key][i]);
+
+      function field(key, i, f) {
+        const [name, label, kind, allowed] = f;
+        const v = item(key, i)[name];
+        const on = `data-k="${key}" data-i="${i}" data-f="${name}"`;
+        if (kind === "textarea") return `<label class="f"><span>${esc(label)}</span><textarea ${on}>${esc(v)}</textarea></label>`;
+        if (kind === "enum") return `<label class="f"><span>${esc(label)}</span><select ${on}>${allowed.map((o) => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
+        if (kind === "list") return `<label class="f"><span>${esc(label)}（逗号分隔）</span><input type="text" ${on} value="${esc((v || []).join(", "))}" /></label>`;
+        if (kind === "number") return `<label class="f"><span>${esc(label)}</span><input type="number" min="0" max="100" ${on} value="${esc(v)}" /></label>`;
+        if (kind === "date") return `<label class="f"><span>${esc(label)}</span><input type="date" ${on} value="${esc(v)}" /></label>`;
+        if (kind === "image")
+          return `<label class="f"><span>${esc(label)}（先<a href="${esc(String(v).startsWith("/images/posts/") ? BASE + "/upload/main/public/images/posts/" : BASE + "/upload/main/public/images/posts/")}" target="_blank" rel="noopener">上传</a>，再把地址粘进来）</span>
+            <div class="img"><img src="${esc(v)}" onerror="this.style.opacity=.2" /><input type="text" ${on} value="${esc(v)}" placeholder="/images/posts/xxx.jpg" /></div></label>`;
+        return `<label class="f"><span>${esc(label)}</span><input type="text" ${on} value="${esc(v)}" /></label>`;
+      }
+
+      function pairs(fields) {
+        const out = [];
+        let buf = [];
+        const flush = () => {
+          if (buf.length === 2) out.push(`<div class="row">${buf.join("")}</div>`);
+          else out.push(...buf);
+          buf = [];
+        };
+        for (const f of fields) {
+          if (f[2] === "textarea" || f[2] === "image") { flush(); out.push(field(S.tab, S.i, f)); continue; }
+          buf.push(field(S.tab, S.i, f));
+          if (buf.length === 2) flush();
+        }
+        flush();
+        return out.join("");
+      }
+
+      let _i = 0;
+      function render() {
+        $("tabs").innerHTML =
+          KEYS.map((k) => `<button data-tab="${k}" class="${k === S.tab ? "on" : ""}">${esc(SCHEMA[k].label)} ${S.data[k].length}</button>`).join("") +
+          `<button data-tab="profile" class="${S.tab === "profile" ? "on" : ""}">个人资料</button>`;
+
+        if (S.tab === "profile") {
+          $("body").innerHTML = `<div class="card">${PROFILE_FIELDS.map((f) => ((S.i = -1), field("profile", -1, f))).join("")}</div>`;
+          bind();
+          return;
+        }
+        const key = S.tab;
+        $("body").innerHTML =
+          (S.data[key].length
+            ? S.data[key].map((row, i) => {
+                const title = row.title || row.name || row.caption || "（未命名）";
+                return `<div class="card"><div class="head"><span class="n">#${i + 1}</span><span class="t">${esc(title)}</span>
+                  <button class="act" data-mv="${i}" data-dir="-1">↑</button>
+                  <button class="act" data-mv="${i}" data-dir="1">↓</button>
+                  <button class="act" data-del="${i}">删除</button></div>
+                  ${SCHEMA[key].fields.map((f) => ((S.i = i), field(key, i, f))).join("")}</div>`;
+              }).join("")
+            : `<div class="empty">还没有内容，点下面的「新增」</div>`) +
+          `<button class="act" id="add">＋ 新增${esc(SCHEMA[key].label)}</button>`;
+        bind();
+      }
+
+      function bind() {
+        document.querySelectorAll("[data-k]").forEach((el) => {
+          el.oninput = () => {
+            const { k, i, f } = el.dataset;
+            const def = (k === "profile" ? PROFILE_FIELDS : SCHEMA[k].fields).find((x) => x[0] === f);
+            let v = el.value;
+            if (def[2] === "list") v = v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+            if (def[2] === "number") v = Number(v);
+            item(k, Number(i))[f] = v;
+          };
+        });
+        document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => ((S.tab = b.dataset.tab), render())));
+        const add = $("add");
+        if (add)
+          add.onclick = () => {
+            const blank = { id: Date.now().toString(36) };
+            for (const [n, , kind, allowed] of SCHEMA[S.tab].fields)
+              blank[n] = kind === "list" ? [] : kind === "number" ? 0 : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
+            S.data[S.tab].push(blank);
+            render();
+          };
+        document.querySelectorAll("[data-del]").forEach((b) =>
+          (b.onclick = () => { S.data[S.tab].splice(Number(b.dataset.del), 1); render(); })
+        );
+        document.querySelectorAll("[data-mv]").forEach((b) =>
+          (b.onclick = () => {
+            const i = Number(b.dataset.mv), j = i + Number(b.dataset.dir);
+            if (j < 0 || j >= S.data[S.tab].length) return;
+            [S.data[S.tab][i], S.data[S.tab][j]] = [S.data[S.tab][j], S.data[S.tab][i]];
+            render();
+          })
+        );
+      }
+
+      function validate() {
+        const errors = [];
+        for (const key of KEYS) {
+          const schema = SCHEMA[key];
+          S.data[key].forEach((row, i) => {
+            for (const [f, label, kind, allowed] of schema.fields) {
+              const v = row[f];
+              if (v === undefined) { errors.push(`${schema.label} 第 ${i + 1} 项缺「${label}」`); continue; }
+              if (f === schema.labelField && !String(v).trim())
+                errors.push(`${schema.label} 第 ${i + 1} 项是空的（「${label}」没填）`);
+              if (kind === "enum" && !allowed.includes(v))
+                errors.push(`${schema.label} 第 ${i + 1} 项「${label}」只能是：${allowed.join(" / ")}`);
+              if (kind === "number" && (!Number.isFinite(v) || v < 0 || v > 100))
+                errors.push(`${schema.label} 第 ${i + 1} 项「${label}」必须是 0-100`);
+            }
+            if (schema.id) {
+              const dup = S.data[key].filter((x) => x.id === row.id).length;
+              if (dup > 1) errors.push(`${schema.label} 有重复 id：${row.id}`);
+            }
+          });
+        }
+        return [...new Set(errors)];
+      }
+
+      function changedFiles() {
+        const out = [];
+        for (const key of KEYS) {
+          if (text(S.data[key]) !== text(S.original[key]))
+            out.push({ path: `src/content/${SCHEMA[key].file}`, label: SCHEMA[key].label, body: text(S.data[key]) });
+        }
+        if (text(S.data.profile) !== text(S.original.profile))
+          out.push({ path: "src/content/profile.json", label: "个人资料", body: text(S.data.profile) });
+        return out;
+      }
+
+      async function copy(value, btn) {
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = value;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        btn.textContent = "已复制 ✓";
+        setTimeout(() => (btn.textContent = "复制"), 1600);
+      }
+
+      $("gen").onclick = () => {
+        showErrors([]);
+        const errors = validate();
+        if (errors.length) { showErrors(errors); $("state").textContent = "未生成"; return; }
+        const files = changedFiles();
+        $("out").innerHTML = files.length
+          ? files
+              .map((f, i) => `<div class="out"><header><code>${esc(f.path)}</code>
+                <button class="act" data-copy="${i}">复制</button>
+                <a class="act" style="text-decoration:none" target="_blank" rel="noopener" href="${BASE}/edit/main/${f.path}">在 GitHub 打开</a></header>
+                <textarea readonly spellcheck="false">${esc(f.body)}</textarea></div>`)
+              .join("") + `<p class="hint">只有上面列出的文件需要粘贴。粘贴后 GitHub 会先给你看 diff，再点 Commit。</p>`
+          : `<p class="hint">没有检测到任何改动。</p>`;
+        files.forEach((f, i) => {
+          document.querySelector(`[data-copy="${i}"]`).onclick = (e) => copy(f.body, e.currentTarget);
+        });
+        $("state").textContent = `${files.length} 个文件有改动`;
+        if (files.length) $("out").firstElementChild?.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+
+      boot();
+    </script>
+  </body>
+</html>

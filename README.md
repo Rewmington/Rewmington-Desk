@@ -65,9 +65,14 @@ src/
 └── types/
     └── index.ts            # TypeScript 类型定义
 
-tools/studio/               # npm run studio 的本地发布台（不进构建产物）
-├── server.mjs              # 读写 content/*.json、压图、commit + push
-└── ui.html                 # 填表界面
+tools/
+├── publish-content.mjs     # 构建后把 content/*.json 快照到 out/content/，供 /admin 同源读取
+└── studio/                 # npm run studio 的本地发布台（不进构建产物）
+    ├── server.mjs          # 读写 content/*.json、压图、commit + push
+    ├── schema.mjs          # 字段定义与校验，本地台专用
+    └── ui.html             # 填表界面
+
+public/admin/index.html     # 线上后台：纯静态，生成待粘贴的 JSON，不需要任何凭据
 ```
 
 ## 🚀 快速开始
@@ -107,30 +112,30 @@ npm run studio
 - 只监听 127.0.0.1，不联网、不需要任何 token
 - 从手机等别处改内容时，仍然可以直接在 GitHub 网页上编辑这些 JSON
 
-### 在线后台（可选，需要一次 Cloudflare 部署）
+### 在线后台（`/admin`，零凭据）
 
-不在自己电脑上也想加内容，可以把同一套界面部署成 `https://wmddd.online/admin`：
+不在自己电脑上时，打开 `https://wmddd.online/admin`。它是一个**纯静态页面，不联网写任何东西**，
+也不需要密码或 token：
 
-```bash
-npm i -D wrangler          # 只用于部署，不进站点依赖
-npx wrangler login         # 浏览器授权你自己的 Cloudflare 账号
-# 在 GitHub 建一个 Fine-grained PAT，只给 Rewmington-Desk 这一个仓库的
-# Contents: Read and write 权限，然后：
-npx wrangler secret put GITHUB_TOKEN
-npx wrangler secret put ADMIN_PASSWORD
-npm run deploy:admin
-```
+1. 页面从**同源**的 `/content/*.json` 读取内容（构建时由 `tools/publish-content.mjs` 把
+   `src/content/*.json` 快照过去），渲染成表单
+2. 改完点「生成提交内容」——只有真正变过的文件会列出来，每个给一个「复制」按钮和一个
+   「在 GitHub 打开」链接
+3. 粘贴 → Commit → 等约 40 秒 Actions 构建完，线上更新
 
-实现在 `worker/index.js`（`wrangler.toml` 里配了 `/admin` 路由）：保存时通过 GitHub 的
-Git Data API 把内容 JSON 和图片 blob 合成**一个** commit 推到 main，Actions 照常构建上线，
-所以站点仍然是纯静态的，构建期字段校验也继续生效。
+加图片走 GitHub 自带的拖拽上传页（`…/upload/main/public/images/posts/`），传完把地址填回字段。
 
-- 后台页面和本地发布台共用 `tools/studio/ui.html`，校验规则共用 `tools/studio/schema.mjs`
-- 线上没有 sharp，图片压缩在浏览器里用 canvas 完成
-- 会话是 HMAC 签名的 HttpOnly cookie，密钥就是 `ADMIN_PASSWORD` 本身
-- **这是全站唯一需要凭据的入口**，`ADMIN_PASSWORD` 请用长随机串；Worker 里没做限流，
-  只有失败后 600ms 延迟这一层缓解
-- 部署后 `https://wmddd.online/admin` 会由 Worker 接管，站点其余路径不受影响
+**为什么不做成"点一下就发布"**：浏览器要替你 commit，就必须持有一个能代表你身份的凭据，
+没有例外。那样一来这个 token 等于仓库写权限，一旦站点引入任何第三方脚本就可能被读走。
+现在这个设计把整类风险消掉了，代价是每次多两下粘贴。
+
+两个已知边界：
+
+- `/content/*.json` 是**上次成功构建的快照**，可能落后于 main。兜底是 GitHub 编辑页——粘贴后
+  它会先给你看 diff，不会静默覆盖
+- 表单字段定义在 `public/admin/index.html` 里有一份，和本地发布台的 `tools/studio/schema.mjs`
+  有意保持同形。加字段时两处都要改；真正的硬校验在构建期 `src/lib/constants.ts`，漏改只会
+  让表单少一个输入框，不会写坏数据
 
 ### 构建与部署
 

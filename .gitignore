@@ -25,10 +25,6 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# wrangler：worker/assets 由 npm run deploy:admin 从 tools/studio/ui.html 复制生成
-worker/assets/
-.wrangler/
-
 # dev tools (not part of the project)
 .claude/
 CLAUDE.md

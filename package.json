@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node tools/publish-content.mjs",
     "start": "next start",
     "lint": "eslint",
-    "studio": "node tools/studio/server.mjs",
-    "deploy:admin": "node tools/studio/prepare-assets.mjs && wrangler deploy"
+    "studio": "node tools/studio/server.mjs"
   },
   "dependencies": {
     "framer-motion": "^12.42.2",
