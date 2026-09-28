@@ -41,7 +41,7 @@ export default function DataMeter() {
     return (
       <button
         onClick={() => setHidden(false)}
-        className="fixed bottom-5 right-5 z-40 hidden md:flex w-5 h-5 rounded-full bg-[var(--bg-card)] backdrop-blur-[20px] border border-[var(--border-card)] items-center justify-center text-[9px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+        className="fixed bottom-3 right-3 md:bottom-5 md:right-5 z-40 flex w-6 h-6 md:w-5 md:h-5 rounded-full bg-[var(--bg-card)] backdrop-blur-[20px] border border-[var(--border-card)] items-center justify-center text-[10px] md:text-[9px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
         title="显示网速计"
         aria-label="显示网速计"
       >
@@ -52,7 +52,7 @@ export default function DataMeter() {
 
   if (usage.pending) {
     return (
-      <div className="fixed bottom-5 right-5 z-40 hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-card)] backdrop-blur-[20px] border border-[var(--border-card)] font-mono text-[11px] text-[var(--text-secondary)] tabular-nums">
+      <div className="fixed bottom-3 right-3 md:bottom-5 md:right-5 z-40 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-card)] backdrop-blur-[20px] border border-[var(--border-card)] font-mono text-[11px] text-[var(--text-secondary)] tabular-nums">
         <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
         加载中 {formatBytes(usage.total)}
         <span className="text-[var(--text-tertiary)]">
@@ -63,9 +63,11 @@ export default function DataMeter() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 hidden md:block">
+    // 移动端：整块贴底，面板在上、药丸在下，等于一个底部抽屉。
+    // 桌面端：解除左边界，靠右下角，面板浮在药丸上方。
+    <div className="fixed bottom-0 right-0 left-0 z-40 flex flex-col md:left-auto md:bottom-5 md:right-5 md:items-end">
       {open && (
-        <div className="mb-2 w-[300px] p-3 rounded-2xl bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] shadow-[var(--shadow-card)]">
+        <div className="max-h-[55vh] overflow-y-auto rounded-t-2xl p-4 bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] md:max-h-none md:overflow-visible md:rounded-2xl md:w-[300px] md:p-3 md:mb-2 md:shadow-[var(--shadow-card)]">
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)]">
               本页传输
@@ -121,7 +123,7 @@ export default function DataMeter() {
         </div>
       )}
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 justify-end px-3 pb-3 md:p-0">
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-card)] backdrop-blur-[20px] border border-[var(--border-card)] hover:border-[var(--accent-primary)] transition-colors font-mono text-[11px] text-[var(--text-secondary)] tabular-nums"
