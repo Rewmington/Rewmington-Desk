@@ -16,12 +16,13 @@ English | [简体中文](./README.md)
 
 - 🎨 **Glassmorphism Design** — Semi-transparent cards with blurred backgrounds for an immersive visual experience
 - 📐 **Bento Grid Layout** — Flexible multi-column grid that adapts to different content types
-- 🌸 **Sakura Falling Animation** — Canvas-rendered dynamic background particle effects
+- 🌸 **Sakura Falling Animation** — 60 DOM particles driven by CSS keyframes (not Canvas), seeded so server and client render identically
 - 🎵 **Music Player** — Built-in player component with track switching
-- 🔍 **Search Bar** — Search component with spotlight effect
-- 💡 **3D Tilt Interaction** — Mouse-following card tilt and gloss effects
+- 💡 **3D Tilt Interaction** — Mouse-following card tilt and spotlight effect
 - 🎬 **Entry Animations** — Staggered fade-in animations powered by Framer Motion
-- 📱 **Responsive Design** — Perfectly adapted for both desktop and mobile
+- 🌗 **Light / Dark Theme** — `useSyncExternalStore` over localStorage, no flash of the wrong theme
+- 📡 **Transfer Meter** — A bottom-right badge showing the page's real downloaded bytes (post-gzip) and its JS/CSS/font/image split
+- 📱 **Responsive Design** — Adapts to mobile; the particle background and transfer meter are breakpoint-gated (see the note below)
 - ⚡ **Static Export** — `output: "export"` for a fully static site with zero server cost
 - 🚀 **GitHub Pages Deployment** — Automated CI/CD build and deployment
 
@@ -40,16 +41,26 @@ English | [简体中文](./README.md)
 ```
 src/
 ├── app/
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Homepage (Bento Grid)
+│   ├── layout.tsx          # Root layout (navbar, background, theme, transfer meter)
+│   ├── page.tsx            # Homepage (Bento Grid)
+│   ├── not-found.tsx       # 404 page, exported as out/404.html for Pages to fall back on
+│   └── {about,articles,photos,projects,friends,music}/page.tsx
 ├── components/
 │   ├── AnimatedEntry.tsx   # Staggered entry animation container
-│   ├── GlassCard.tsx       # Glassmorphism card component
+│   ├── ArticleCard.tsx     # Article card
+│   ├── DataMeter.tsx       # Transfer meter (bottom-right)
+│   ├── GlassCard.tsx       # Glassmorphism card (3D tilt + spotlight)
 │   ├── MusicPlayer.tsx     # Music player
+│   ├── Navbar.tsx          # Top nav, theme toggle, mobile menu
+│   ├── PhotoCarousel.tsx   # Homepage photo carousel
+│   ├── PhotoLightbox.tsx   # Enlarged photo overlay
 │   ├── ProfileCard.tsx     # Profile information card
-│   ├── SakuraBackground.tsx # Sakura falling background
-│   └── StatusBar.tsx       # Bottom status bar
-├── content/                # ← Edit these to change site content (JSON, editable in the GitHub web UI)
+│   ├── ProjectTracker.tsx  # Project progress card
+│   ├── SakuraBackground.tsx# Sakura particle background
+│   ├── StatusBar.tsx       # Homepage bottom status bar
+│   ├── SystemTopBar.tsx    # OS-style top bar (its ⌘K modal has no search logic yet)
+│   └── ThemeProvider.tsx   # Light/dark theme
+├── content/                # ← All site content lives here; edit via `npm run studio` or /admin
 │   ├── profile.json        # Name, bio, avatar
 │   ├── articles.json       # Articles
 │   ├── projects.json       # Projects
@@ -57,13 +68,14 @@ src/
 │   ├── friends.json        # Friends / blogroll
 │   └── music.json          # Music tracks
 ├── hooks/
-│   ├── useClock.ts         # Clock hook
-│   ├── useSpotlight.ts     # Spotlight effect hook
-│   └── useTiltEffect.ts    # 3D tilt effect hook
+│   ├── useClock.ts         # Clock
+│   ├── useDataUsage.ts     # Reads transferSize from Resource Timing
+│   ├── useSpotlight.ts     # Spotlight effect
+│   └── useTiltEffect.ts    # 3D tilt effect
 ├── lib/
 │   └── constants.ts        # Loads content/*.json, fails the build on bad fields
 └── types/
-    └── index.ts            # TypeScript type definitions
+    └── index.ts            # Type definitions + allowed enum values
 
 tools/
 ├── publish-content.mjs     # after build, snapshot content/*.json into out/content/ for /admin
@@ -72,7 +84,9 @@ tools/
     ├── schema.mjs          # field definitions and validation, used by the local desk
     └── ui.html             # the form UI
 
-public/admin/index.html     # online admin: static, emits paste-ready JSON, needs no credentials
+public/
+├── admin/index.html        # online admin: static, emits paste-ready JSON, needs no credentials
+└── images/posts/           # photos and covers; URLs drop the `public` prefix
 ```
 
 ## 🚀 Getting Started
@@ -143,10 +157,20 @@ Two known edges:
   deliberately kept in the same shape. Add a field and you touch both. The real hard validation is
   at build time in `src/lib/constants.ts`, so a missed edit only costs you one input, not bad data
 
+### Two behaviours worth knowing
+
+**The content JSON is public.** The build snapshots `src/content/*.json` into `out/content/`, so
+`https://wmddd.online/content/*.json` is readable by anyone. That is what makes `/admin` work, and
+also why it is safe: read-only, with no write capability. Never put anything private in these files.
+
+**Mobile notes.** Both the particle background and the transfer meter are breakpoint-gated: the
+background is `hidden md:block` (absent below 768px to save CPU/GPU), and the transfer meter turns
+into a full-width bottom sheet on small screens.
+
 ### Build & Deploy
 
 ```bash
-# Build the static site (output to out/ directory)
+# Build the static site (outputs to out/, and snapshots into out/content/ at the end)
 npm run build
 ```
 

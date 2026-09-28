@@ -16,12 +16,13 @@
 
 - 🎨 **毛玻璃拟态设计** — 半透明卡片 + 模糊背景，打造沉浸式视觉体验
 - 📐 **Bento Grid 布局** — 灵活的多栏网格，适配不同内容类型
-- 🌸 **樱花飘落动画** — Canvas 绘制的动态背景粒子效果
+- 🌸 **樱花飘落动画** — 60 片 DOM 粒子配 CSS keyframes（不是 Canvas），种子固定所以服务端与客户端渲染一致
 - 🎵 **音乐播放器** — 内置播放器组件，支持曲目切换
-- 🔍 **搜索栏** — 带聚光灯效果的搜索组件
-- 💡 **3D 倾斜交互** — 鼠标跟随的卡片倾斜与光泽效果
+- 💡 **3D 倾斜交互** — 鼠标跟随的卡片倾斜与聚光灯效果
 - 🎬 **入场动画** — 基于 Framer Motion 的交错渐入动画
-- 📱 **响应式设计** — 完美适配桌面端与移动端
+- 🌗 **明暗主题切换** — `useSyncExternalStore` 读 localStorage，无刷新闪烁
+- 📡 **传输量计** — 右下角显示当前页面真实下载字节（gzip 后）与 JS/CSS/字体/图片 构成
+- 📱 **响应式设计** — 移动端自适应；樱花背景与传输量计按断点控制（见下方"移动端注意"）
 - ⚡ **静态导出** — `output: "export"` 纯静态站点，零服务器成本
 - 🚀 **GitHub Pages 部署** — CI/CD 自动构建与部署
 
@@ -40,16 +41,26 @@
 ```
 src/
 ├── app/
-│   ├── layout.tsx          # 根布局
-│   └── page.tsx            # 首页（Bento Grid）
+│   ├── layout.tsx          # 根布局（导航栏、背景、主题、网速计都挂在这里）
+│   ├── page.tsx            # 首页（Bento Grid）
+│   ├── not-found.tsx       # 404 页，构建时导出成 out/404.html 由 Pages 兜底
+│   └── {about,articles,photos,projects,friends,music}/page.tsx
 ├── components/
 │   ├── AnimatedEntry.tsx   # 交错入场动画容器
-│   ├── GlassCard.tsx       # 毛玻璃卡片组件
+│   ├── ArticleCard.tsx     # 文章卡
+│   ├── DataMeter.tsx       # 传输量计（右下角）
+│   ├── GlassCard.tsx       # 毛玻璃卡片（3D 倾斜 + 聚光灯）
 │   ├── MusicPlayer.tsx     # 音乐播放器
+│   ├── Navbar.tsx          # 顶部导航 + 主题切换 + 移动端菜单
+│   ├── PhotoCarousel.tsx   # 首页照片轮播
+│   ├── PhotoLightbox.tsx   # 照片放大层
 │   ├── ProfileCard.tsx     # 个人信息卡
-│   ├── SakuraBackground.tsx # 樱花飘落背景
-│   └── StatusBar.tsx       # 底部状态栏
-├── content/                # ← 改内容就来这里，JSON 可在 GitHub 网页直接编辑
+│   ├── ProjectTracker.tsx  # 项目进度卡
+│   ├── SakuraBackground.tsx# 樱花粒子背景
+│   ├── StatusBar.tsx       # 首页底部状态栏
+│   ├── SystemTopBar.tsx    # 首页 OS 风格顶栏（⌘K 弹窗目前无检索逻辑）
+│   └── ThemeProvider.tsx   # 明暗主题
+├── content/                # ← 全站内容，改这里；用 npm run studio 或 /admin 编辑
 │   ├── profile.json        # 昵称、简介、头像
 │   ├── articles.json       # 文章
 │   ├── projects.json       # 项目
@@ -57,13 +68,14 @@ src/
 │   ├── friends.json        # 友链
 │   └── music.json          # 音乐
 ├── hooks/
-│   ├── useClock.ts         # 时钟 Hook
-│   ├── useSpotlight.ts     # 聚光灯效果 Hook
-│   └── useTiltEffect.ts    # 3D 倾斜效果 Hook
+│   ├── useClock.ts         # 时钟
+│   ├── useDataUsage.ts     # 读 Resource Timing 的 transferSize
+│   ├── useSpotlight.ts     # 聚光灯效果
+│   └── useTiltEffect.ts    # 3D 倾斜效果
 ├── lib/
 │   └── constants.ts        # 读取 content/*.json，字段写错时构建期报错
 └── types/
-    └── index.ts            # TypeScript 类型定义
+    └── index.ts            # 类型定义 + 允许的枚举值
 
 tools/
 ├── publish-content.mjs     # 构建后把 content/*.json 快照到 out/content/，供 /admin 同源读取
@@ -72,7 +84,9 @@ tools/
     ├── schema.mjs          # 字段定义与校验，本地台专用
     └── ui.html             # 填表界面
 
-public/admin/index.html     # 线上后台：纯静态，生成待粘贴的 JSON，不需要任何凭据
+public/
+├── admin/index.html        # 线上后台：纯静态，生成待粘贴的 JSON，不需要任何凭据
+└── images/posts/           # 照片与封面，URL 去掉 public 前缀
 ```
 
 ## 🚀 快速开始
@@ -137,10 +151,19 @@ npm run studio
   有意保持同形。加字段时两处都要改；真正的硬校验在构建期 `src/lib/constants.ts`，漏改只会
   让表单少一个输入框，不会写坏数据
 
+### 值得知道的两个行为
+
+**内容 JSON 是公开的。** 构建会把 `src/content/*.json` 原样快照到 `out/content/`，所以
+`https://wmddd.online/content/*.json` 任何人都能读到。这是 `/admin` 能工作的前提，也是它安全的原因
+（只读、无写能力）。不要往这些 JSON 里放任何私密内容。
+
+**移动端注意。** 樱花粒子背景和传输量计都受断点控制：粒子背景 `hidden md:block`（<768px 不显示，
+省 CPU/GPU），传输量计在移动端改为贴底的满宽抽屉。
+
 ### 构建与部署
 
 ```bash
-# 构建静态站点（输出到 out/ 目录）
+# 构建静态站点（输出到 out/ 目录，末尾会自动生成 out/content/ 快照）
 npm run build
 ```
 
