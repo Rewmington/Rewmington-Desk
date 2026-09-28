@@ -1,5 +1,7 @@
 {
   "authorName": "Rewmington",
   "bio": "个人简介待完善",
-  "avatarUrl": "/avatar.jpg"
+  "avatarUrl": "/avatar.jpg",
+  "techIntro": "热爱前端开发，喜欢探索新技术。日常使用 Next.js、React、TypeScript、Tailwind CSS 等工具构建项目。",
+  "techStack": ["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js", "Git"]
 }

@@ -5,6 +5,8 @@ const siteConfig: SiteConfig = {
   authorName: profile.authorName,
   bio: profile.bio,
   avatarUrl: profile.avatarUrl,
+  techIntro: profile.techIntro,
+  techStack: profile.techStack,
   socials: [
     {
       name: "GitHub",

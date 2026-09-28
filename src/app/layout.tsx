@@ -17,8 +17,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rewmington's Workbench OS",
-  description: "Personal Workbench Dashboard",
+  // metadataBase 缺了的话，Open Graph 里的相对图片路径不会补成绝对 URL，
+  // 分享到聊天软件时卡片就不显示图。
+  metadataBase: new URL("https://wmddd.online"),
+  title: {
+    default: "Rewmington 的个人工作台",
+    template: "%s · Rewmington",
+  },
+  description:
+    "Rewmington 的个人主页：项目、照片、音乐与随笔。Next.js 16 静态导出，部署在 GitHub Pages。",
+  openGraph: {
+    type: "website",
+    url: "https://wmddd.online",
+    siteName: "Rewmington 的个人工作台",
+    title: "Rewmington 的个人工作台",
+    description:
+      "Rewmington 的个人主页：项目、照片、音乐与随笔。Next.js 16 静态导出，部署在 GitHub Pages。",
+    images: [{ url: "/avatar.jpg", width: 512, height: 512, alt: "Rewmington" }],
+    locale: "zh_CN",
+  },
+  twitter: {
+    card: "summary",
+    title: "Rewmington 的个人工作台",
+    description: "项目、照片、音乐与随笔。",
+    images: ["/avatar.jpg"],
+  },
+  robots: {
+    index: true,
+    // /admin 是编辑入口，不该进搜索结果。它本身只读、无凭据，但没必要被收录。
+  },
 };
 
 export default function RootLayout({

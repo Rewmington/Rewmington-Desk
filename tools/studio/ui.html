@@ -314,6 +314,8 @@
               ["authorName", "名字", "text"],
               ["bio", "简介", "textarea"],
               ["avatarUrl", "头像路径", "image"],
+              ["techIntro", "技术栈介绍", "textarea"],
+              ["techStack", "技术栈", "list"],
             ].map((f) => fieldInput("profile", -1, f)).join("")}
           </div>`;
           return;
@@ -362,9 +364,9 @@
       }
 
       function onProfile(name, el) {
-        const kind = { authorName: "text", bio: "textarea", avatarUrl: "image" }[name];
+        const kind = { authorName: "text", bio: "textarea", avatarUrl: "image", techIntro: "textarea", techStack: "list" }[name];
         let v = el.value;
-        if (kind === "number") v = Number(v);
+        if (kind === "list") v = v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
         S.data.profile[name] = v;
         S.dirty = true;
       }

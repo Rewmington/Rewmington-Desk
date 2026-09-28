@@ -65,10 +65,10 @@ export default function AboutPage() {
                   🛠️ 技术栈
                 </h2>
                 <p className="text-[var(--text-secondary)] text-sm md:text-base leading-relaxed">
-                  热爱前端开发，喜欢探索新技术。日常使用 Next.js、React、TypeScript、Tailwind CSS 等工具构建项目。
+                  {siteConfig.techIntro}
                 </p>
                 <div className="flex gap-2 flex-wrap mt-2">
-                  {["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js", "Git"].map((tech) => (
+                  {siteConfig.techStack.map((tech) => (
                     <span
                       key={tech}
                       className="px-3 py-1 text-xs rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] backdrop-blur-sm"
@@ -91,8 +91,8 @@ export default function AboutPage() {
               </h2>
               <p className="text-[var(--text-secondary)] text-sm md:text-base leading-relaxed">
                 本站基于 Next.js 16 构建，采用毛玻璃拟态（Glassmorphism）设计风格，
-                搭配 Bento Grid 布局和丰富的交互动画。静态导出部署在 GitHub Pages，
-                零服务器成本，极速访问。
+                搭配 Bento Grid 布局和丰富的交互动画。整站静态导出后部署在 GitHub Pages，
+                经 Cloudflare 分发，没有任何服务器需要维护。
               </p>
             </div>
           </GlassCard>

@@ -101,7 +101,7 @@
           ["title","曲名","text"], ["artist","作者","text"], ["src","音频地址","text"], ["cover","封面","image"]] },
       };
       const KEYS = Object.keys(SCHEMA);
-      const PROFILE_FIELDS = [["authorName","名字","text"], ["bio","简介","textarea"], ["avatarUrl","头像路径","image"]];
+      const PROFILE_FIELDS = [["authorName","名字","text"], ["bio","简介","textarea"], ["avatarUrl","头像路径","image"], ["techIntro","技术栈介绍","textarea"], ["techStack","技术栈","list"]];
 
       const S = { data: {}, original: {}, tab: "articles" };
       const $ = (id) => document.getElementById(id);

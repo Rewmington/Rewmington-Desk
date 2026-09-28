@@ -29,6 +29,9 @@ export interface SiteConfig {
   authorName: string;
   bio: string;
   avatarUrl: string;
+  /** 关于页「技术栈」卡片的介绍文案，与 profile.json 同源，改内容不用动代码 */
+  techIntro: string;
+  techStack: string[];
   socials: SocialLink[];
 }
 
