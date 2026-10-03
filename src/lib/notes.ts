@@ -38,8 +38,19 @@ export interface Note extends NoteMeta {
   toc: TocItem[];
 }
 
+/** marked 会把正文里的引号等转成 HTML 实体，目录是纯文本，得还原回来 */
+function decodeEntities(s: string) {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+}
+
 function stripTags(s: string) {
-  return s.replace(/<[^>]+>/g, "").trim();
+  return decodeEntities(s.replace(/<[^>]+>/g, "")).trim();
 }
 
 /** 粗估阅读时长：中日韩字符按 350/分，拉丁词按 200/分 */
