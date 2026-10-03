@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+/** 读不到就返回 null：服务端渲染时 localStorage 不存在，隐私模式下会抛错 */
+function readLocal(k: string) {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * 阅读页的交互层。正文是构建期预渲染的静态 HTML，这里只负责三件事：
@@ -11,22 +20,17 @@ import { useEffect, useRef, useState } from "react";
 export default function ArticleReader({ slug }: { slug: string }) {
   const [pct, setPct] = useState(0);
   const [resume, setResume] = useState<number | null>(null);
-  const [fs, setFs] = useState(0);
+  // 字号不进 markup（只在 changeFs 里被读），所以可以在首次 render 就读出来，
+  // 不必「effect 里 setState」。服务端读到 0，不会造成 hydration 不一致。
+  const [fs, setFs] = useState(() => Number(readLocal(`note:${slug}:fs`) || 0));
   const doneRef = useRef<HTMLSpanElement>(null);
 
-  const key = (k: string) => `note:${slug}:${k}`;
+  // 不包 useCallback 的话它每次 render 都是新函数，下面三个 effect 就跟着每次重跑
+  const key = useCallback((k: string) => `note:${slug}:${k}`, [slug]);
 
   useEffect(() => {
-    try {
-      const savedFs = Number(localStorage.getItem(key("fs")) || 0);
-      if (savedFs) {
-        document.documentElement.style.setProperty("--md-fs", `${savedFs}px`);
-        setFs(savedFs);
-      }
-    } catch {
-      /* 隐私模式下 localStorage 会抛错，忽略即可 */
-    }
-  }, [key]);
+    if (fs) document.documentElement.style.setProperty("--md-fs", `${fs}px`);
+  }, [fs]);
 
   useEffect(() => {
     const boxes = Array.from(
@@ -98,12 +102,18 @@ export default function ArticleReader({ slug }: { slug: string }) {
     } catch {
       saved = 0;
     }
+    let raf = 0;
     if (saved > 0.05 && saved < 0.95 && window.scrollY < 200) {
       window.scrollTo(0, Math.max(0, (doc.offsetHeight - window.innerHeight) * saved));
-      setResume(saved);
+      // 「上次读到 X%」这个按钮要等上面那次滚动落地再出现，
+      // 在 effect 体里直接 setState 会触发级联渲染，推到下一帧
+      raf = requestAnimationFrame(() => setResume(saved));
     }
 
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [slug, key]);
 
   function changeFs(delta: number) {
