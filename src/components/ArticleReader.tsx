@@ -78,7 +78,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
     const doc = document.querySelector(".md-body") as HTMLElement | null;
     if (!doc) return;
 
-    let last = 0;
+    let last = Date.now(); // 挂载后第一次调用只画进度条，别把存着的阅读位置盖成 0
     const onScroll = () => {
       const h = doc.offsetHeight - window.innerHeight;
       const p = h <= 0 ? 0 : Math.min(1, Math.max(0, window.scrollY / h));
@@ -93,27 +93,30 @@ export default function ArticleReader({ slug }: { slug: string }) {
         }
       }
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
 
+    // 必须先读旧位置再挂监听：onScroll() 会把当前进度写回 prog，
+    // 顺序反了就读到 0，这个功能会静默失效（之前正是这样）
     let saved = 0;
     try {
       saved = Number(localStorage.getItem(key("prog")) || 0);
     } catch {
       saved = 0;
     }
-    let raf = 0;
-    if (saved > 0.05 && saved < 0.95 && window.scrollY < 200) {
-      window.scrollTo(0, Math.max(0, (doc.offsetHeight - window.innerHeight) * saved));
-      // 「上次读到 X%」这个按钮要等上面那次滚动落地再出现，
-      // 在 effect 体里直接 setState 会触发级联渲染，推到下一帧
-      raf = requestAnimationFrame(() => setResume(saved));
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    if (saved > 0.05 && saved < 0.95) {
+      // scrollY 已经不在顶部 = 浏览器自己恢复了位置，别再跳一次
+      if (window.scrollY < 200) {
+        window.scrollTo(0, Math.max(0, (doc.offsetHeight - window.innerHeight) * saved));
+      }
+      // microtask 里 setState：effect 体里直接 setState 会触发级联渲染，
+      // 而这次 scrollTo 是同步生效的，不需要等绘制（用 rAF 的话后台标签页里根本不触发）
+      queueMicrotask(() => setResume(saved));
     }
 
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
+    return () => window.removeEventListener("scroll", onScroll);
   }, [slug, key]);
 
   function changeFs(delta: number) {
