@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import matter from "gray-matter";
 import { marked } from "marked";
 
@@ -53,6 +54,28 @@ function stripTags(s: string) {
   return decodeEntities(s.replace(/<[^>]+>/g, "")).trim();
 }
 
+/** 归一化：去掉标签、把连续空白压成一个空格，让「同一句话换个换行」也算同一条 */
+function normalize(s: string) {
+  return stripTags(s).replace(/\s+/g, " ");
+}
+
+/**
+ * 复选框的稳定标识。
+ *
+ * 以前前端按方框在页面里出现的**顺序**编号存状态，于是在文档前面插一个方框，
+ * 后面所有历史勾选就整体错位一格。这里改成按内容算哈希：
+ *   所在小节标题 + 条目文字 + 同小节内第几次出现
+ * 第三项是必须的：weekly-plan 里「算法 2 题」出现了 7 次，光靠文字无法区分。
+ * 按小节分组后，它们分属不同的 h3，天然不撞；万一同一小节里真有两个同名条目，
+ * 才靠序号区分。
+ */
+function checkToken(scope: string, text: string, dup: number) {
+  return createHash("sha1")
+    .update(`${scope}\u0001${text}\u0001${dup}`)
+    .digest("hex")
+    .slice(0, 12);
+}
+
 /** 粗估阅读时长：中日韩字符按 350/分，拉丁词按 200/分 */
 function readingMinutes(raw: string) {
   const cjk = (raw.match(/[一-龥]/g) || []).length;
@@ -71,6 +94,44 @@ function toMeta(slug: string, data: Record<string, unknown>, raw: string): NoteM
     order: typeof data.order === "number" ? data.order : 0,
     minutes: readingMinutes(raw),
   };
+}
+
+/**
+ * 给每个复选框打上 data-k（内容哈希），前端拿它当存储键。
+ * 单趟扫描：小标题决定当前 scope，方框取到最近的 </li> 之间是条目文字。
+ */
+function tagCheckboxes(html: string) {
+  const seen = new Map<string, number>();
+  let scope = "（第一小节之前）";
+  let out = "";
+  let cursor = 0;
+  const re = /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>|<input\b[^>]*class="md-check"[^>]*>/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = re.exec(html)) !== null) {
+    out += html.slice(cursor, m.index);
+    cursor = re.lastIndex;
+
+    if (m[2] !== undefined) {
+      const t = normalize(m[2]);
+      if (t) scope = t;
+      out += m[0];
+      continue;
+    }
+
+    const liEnd = html.indexOf("</li>", cursor);
+    const text = normalize(liEnd < 0 ? "" : html.slice(cursor, liEnd));
+    const dupKey = `${scope}\u0001${text}`;
+    const dup = seen.get(dupKey) ?? 0;
+    seen.set(dupKey, dup + 1);
+
+    out += m[0].replace(
+      'class="md-check"',
+      `class="md-check" data-k="${checkToken(scope, text, dup)}"`,
+    );
+  }
+
+  return out + html.slice(cursor);
 }
 
 /** marked 不认识锚点和可勾选框，这里统一补上 */
@@ -94,6 +155,8 @@ function renderBody(content: string) {
       ? tag.replace(/\s*disabled(?:\s*=\s*"[^"]*")?/, "").replace("<input", '<input class="md-check"')
       : tag,
   );
+
+  html = tagCheckboxes(html);
 
   // 宽表在手机上会撑破版面，套一层可横向滚动的容器
   html = html.replace(/<table>/g, '<div class="md-tw"><table>').replace(/<\/table>/g, "</table></div>");

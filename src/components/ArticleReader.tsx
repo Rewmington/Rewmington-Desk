@@ -33,7 +33,22 @@ export default function ArticleReader({ slug }: { slug: string }) {
       document.querySelectorAll<HTMLInputElement>(".md-check"),
     );
     boxes.forEach((box, i) => {
-      const k = key(`t${i}`);
+      // 键按条目内容哈希（构建期写在 data-k 上），插删方框不会让历史勾选错位；
+      // 万一拿不到 data-k（老构建产物）才退回序号
+      const token = box.dataset.k;
+      const k = key(token ? `k${token}` : `t${i}`);
+      if (token) {
+        // 一次性把这次改动之前按序号存的状态搬到内容键上
+        try {
+          const legacy = localStorage.getItem(key(`t${i}`));
+          if (legacy !== null && localStorage.getItem(k) === null) {
+            localStorage.setItem(k, legacy);
+            localStorage.removeItem(key(`t${i}`));
+          }
+        } catch {
+          /* 读不到就算了 */
+        }
+      }
       let saved = false;
       try {
         saved = localStorage.getItem(k) === "1";
