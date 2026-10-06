@@ -54,20 +54,26 @@ export default function ArticleReader({ slug }: { slug: string }) {
     if (fs) document.documentElement.style.setProperty("--md-fs", `${fs}px`);
   }, [fs]);
 
-  /** 远端时间戳更新的条目，直接改页面上已经渲染出来的方框 */
-  const applyWon = useCallback(
-    (won: Doc) => {
-      for (const [tk, val] of Object.entries(won[slug] || {})) {
+  /**
+   * 拿合并后的整份 doc 和 localStorage 逐条比，不一样就校正页面。
+   * 不能只挑「远端赢了镜像」的那些：镜像可能已经收进远端值了，
+   * 那样这一页就永远不会被校正（就是这个 bug 让手机连上了却还显示自己的旧状态）。
+   */
+  const applyDoc = useCallback(
+    (doc: Doc) => {
+      for (const [tk, val] of Object.entries(doc[slug] || {})) {
+        const k = key(`k${tk}`);
+        if (readLocal(k) === val) continue;
+        try {
+          localStorage.setItem(k, val);
+        } catch {
+          /* 存不下就算了 */
+        }
         const box = boxesRef.current.find((b) => b.dataset.k === tk);
         if (!box) continue;
         const on = parseVal(val).on;
         box.checked = on;
         box.closest("li")?.classList.toggle("md-done", on);
-        try {
-          localStorage.setItem(key(`k${tk}`), val);
-        } catch {
-          /* 存不下就算了 */
-        }
       }
     },
     [slug, key],
@@ -86,13 +92,13 @@ export default function ArticleReader({ slug }: { slug: string }) {
         setSyncMsg(r.error || "同步失败");
         return;
       }
-      applyWon(r.won);
+      applyDoc(r.doc);
       setAt(Date.now());
       setSyncMsg("");
       if (r.dirt) schedulePush(300);
       setSyncState("ok");
     },
-    [applyWon],
+    [applyDoc],
   );
 
   useEffect(() => {

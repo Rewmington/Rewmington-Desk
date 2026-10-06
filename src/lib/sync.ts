@@ -103,16 +103,9 @@ function writeDoc(d: Doc) {
   }
 }
 
-/**
- * 逐条取时间戳新的那个。won 放「远端赢了」的条目，调用方拿它去更新页面上已渲染的方框；
- * dirt 表示「本地有东西还没上去」，需要推送。
- */
-export function mergeDocs(
-  local: Doc,
-  remote: Doc,
-): { doc: Doc; won: Doc; dirt: boolean } {
+/** 逐条取时间戳新的那个。dirt 表示「本地有东西还没上去」，需要推送。 */
+export function mergeDocs(local: Doc, remote: Doc): { doc: Doc; dirt: boolean } {
   const doc: Doc = {};
-  const won: Doc = {};
   let dirt = false;
 
   for (const slug of new Set([...Object.keys(local), ...Object.keys(remote)])) {
@@ -122,17 +115,12 @@ export function mergeDocs(
     for (const k of new Set([...Object.keys(l), ...Object.keys(r)])) {
       const lt = parseVal(k in l ? l[k] : null);
       const rt = parseVal(k in r ? r[k] : null);
-      if (rt.ts > lt.ts) {
-        out[k] = r[k];
-        (won[slug] ||= {})[k] = r[k];
-      } else {
-        out[k] = l[k];
-        if (lt.ts > rt.ts) dirt = true;
-      }
+      out[k] = rt.ts > lt.ts ? r[k] : l[k];
+      if (lt.ts > rt.ts) dirt = true;
     }
     doc[slug] = out;
   }
-  return { doc, won, dirt };
+  return { doc, dirt };
 }
 
 /** 把当前页面读到的本地状态折进镜像，免得「点了但没推上去」的改动只躺在 localStorage 里 */
@@ -214,13 +202,13 @@ export async function ensureGist(): Promise<string> {
   return body.id;
 }
 
-export type PullResult = { ok: boolean; won: Doc; dirt: boolean; error?: string };
+export type PullResult = { ok: boolean; doc: Doc; dirt: boolean; error?: string };
 
-/** 拉远端并和本地镜像合并；won 是当前设备需要照着改页面的条目 */
+/** 拉远端并和本地镜像合并；doc 是合并后的整份，调用方要拿它去校正页面 */
 export async function pull(force = false): Promise<PullResult> {
-  if (!getToken()) return { ok: false, won: {}, dirt: false, error: "没填 token" };
+  if (!getToken()) return { ok: false, doc: {}, dirt: false, error: "没填 token" };
   if (!force && Date.now() - lastSyncAt() < PULL_MIN_MS) {
-    return { ok: true, won: {}, dirt: false };
+    return { ok: true, doc: readDoc(), dirt: false };
   }
   try {
     const id = await ensureGist();
@@ -229,9 +217,9 @@ export async function pull(force = false): Promise<PullResult> {
     const merged = mergeDocs(readDoc(), docOf(await res.json()));
     writeDoc(merged.doc);
     markSynced();
-    return { ok: true, won: merged.won, dirt: merged.dirt };
+    return { ok: true, doc: merged.doc, dirt: merged.dirt };
   } catch (e) {
-    return { ok: false, won: {}, dirt: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, doc: {}, dirt: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -274,16 +262,14 @@ export async function push(): Promise<{ ok: boolean; error?: string }> {
   }
 }
 
-/** 填 token 后走一遍完整流程：认/建 gist、拉一次、把本地已有的状态推上去 */
+/**
+ * 点「连接」时只做一件事：确认 token 能用、并把存状态的 gist 找到或建出来。
+ * 拉取和推送交给调用方接着走一次正常同步 —— 之前这里自己先拉了一次又不应用到页面，
+ * 镜像被提前更新，后面那次拉取就报不出差异，页面永远停在旧状态。
+ */
 export async function connect(): Promise<{ ok: boolean; error?: string }> {
   try {
     await ensureGist();
-    const p = await pull(true);
-    if (!p.ok) throw new Error(p.error || "拉取失败");
-    if (p.dirt) {
-      const r = await push();
-      if (!r.ok) throw new Error(r.error || "推送失败");
-    }
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
