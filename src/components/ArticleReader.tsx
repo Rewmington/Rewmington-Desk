@@ -1,6 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  connect,
+  foldLocal,
+  forget,
+  getToken,
+  makeVal,
+  parseVal,
+  pull,
+  schedulePush,
+  seedVal,
+  setToken,
+  type Doc,
+} from "@/lib/sync";
 
 /** 读不到就返回 null：服务端渲染时 localStorage 不存在，隐私模式下会抛错 */
 function readLocal(k: string) {
@@ -12,10 +25,11 @@ function readLocal(k: string) {
 }
 
 /**
- * 阅读页的交互层。正文是构建期预渲染的静态 HTML，这里只负责三件事：
- * 1) 把清单里的复选框变成可点、并把结果记在 localStorage（没有后端，换设备不同步）
+ * 阅读页的交互层。正文是构建期预渲染的静态 HTML，这里只负责四件事：
+ * 1) 把清单里的复选框变成可点、记在 localStorage，并通过你自己的 gist 跨设备同步
  * 2) 顶部阅读进度条 + 记住上次读到的位置
  * 3) 字号切换
+ * 4) 那个「同步」开关和填 token 的面板
  */
 export default function ArticleReader({ slug }: { slug: string }) {
   const [pct, setPct] = useState(0);
@@ -24,24 +38,76 @@ export default function ArticleReader({ slug }: { slug: string }) {
   // 不必「effect 里 setState」。服务端读到 0，不会造成 hydration 不一致。
   const [fs, setFs] = useState(() => Number(readLocal(`note:${slug}:fs`) || 0));
   const doneRef = useRef<HTMLSpanElement>(null);
+  const boxesRef = useRef<HTMLInputElement[]>([]);
+  const [syncState, setSyncState] = useState<"off" | "busy" | "ok" | "error">(
+    getToken() ? "ok" : "off",
+  );
+  const [syncMsg, setSyncMsg] = useState("");
+  const [at, setAt] = useState(0);
+  const [panel, setPanel] = useState(false);
+  const [tokenDraft, setTokenDraft] = useState("");
 
-  // 不包 useCallback 的话它每次 render 都是新函数，下面三个 effect 就跟着每次重跑
+  // 不包 useCallback 的话它每次 render 都是新函数，下面几个 effect 就跟着每次重跑
   const key = useCallback((k: string) => `note:${slug}:${k}`, [slug]);
 
   useEffect(() => {
     if (fs) document.documentElement.style.setProperty("--md-fs", `${fs}px`);
   }, [fs]);
 
+  /** 远端时间戳更新的条目，直接改页面上已经渲染出来的方框 */
+  const applyWon = useCallback(
+    (won: Doc) => {
+      for (const [tk, val] of Object.entries(won[slug] || {})) {
+        const box = boxesRef.current.find((b) => b.dataset.k === tk);
+        if (!box) continue;
+        const on = parseVal(val).on;
+        box.checked = on;
+        box.closest("li")?.classList.toggle("md-done", on);
+        try {
+          localStorage.setItem(key(`k${tk}`), val);
+        } catch {
+          /* 存不下就算了 */
+        }
+      }
+    },
+    [slug, key],
+  );
+
+  const runSync = useCallback(
+    async (force = false) => {
+      if (!getToken()) {
+        setSyncState("off");
+        return;
+      }
+      setSyncState("busy");
+      const r = await pull(force);
+      if (!r.ok) {
+        setSyncState("error");
+        setSyncMsg(r.error || "同步失败");
+        return;
+      }
+      applyWon(r.won);
+      setAt(Date.now());
+      setSyncMsg("");
+      if (r.dirt) schedulePush(300);
+      setSyncState("ok");
+    },
+    [applyWon],
+  );
+
   useEffect(() => {
     const boxes = Array.from(
       document.querySelectorAll<HTMLInputElement>(".md-check"),
     );
+    boxesRef.current = boxes;
+    const local: Record<string, string> = {};
+
     boxes.forEach((box, i) => {
       // 键按条目内容哈希（构建期写在 data-k 上），插删方框不会让历史勾选错位；
       // 万一拿不到 data-k（老构建产物）才退回序号
-      const token = box.dataset.k;
-      const k = key(token ? `k${token}` : `t${i}`);
-      if (token) {
+      const tk = box.dataset.k;
+      const k = key(tk ? `k${tk}` : `t${i}`);
+      if (tk) {
         // 一次性把这次改动之前按序号存的状态搬到内容键上
         try {
           const legacy = localStorage.getItem(key(`t${i}`));
@@ -53,26 +119,68 @@ export default function ArticleReader({ slug }: { slug: string }) {
           /* 读不到就算了 */
         }
       }
-      let saved = false;
-      try {
-        saved = localStorage.getItem(k) === "1";
-      } catch {
-        saved = false;
+      const stored = readLocal(k);
+      box.checked = parseVal(stored).on;
+      box.closest("li")?.classList.toggle("md-done", box.checked);
+      // 老数据没有时间戳，补一个最小的：够格被推上去，但任何真实改动都能盖过它
+      if (tk && stored !== null) {
+        const seeded = seedVal(stored);
+        if (seeded !== stored) {
+          try {
+            localStorage.setItem(k, seeded);
+          } catch {
+            /* ignore */
+          }
+        }
+        local[tk] = seeded;
       }
-      box.checked = saved;
-      box.closest("li")?.classList.toggle("md-done", saved);
+
       const onChange = () => {
         box.closest("li")?.classList.toggle("md-done", box.checked);
+        const val = makeVal(box.checked);
         try {
-          localStorage.setItem(k, box.checked ? "1" : "0");
+          localStorage.setItem(k, val);
         } catch {
           /* 存不下就算了 */
+        }
+        if (tk) {
+          foldLocal(slug, { [tk]: val });
+          schedulePush();
         }
       };
       box.addEventListener("change", onChange);
     });
+
+    if (Object.keys(local).length) foldLocal(slug, local);
+    // 同步不挡首屏，放 microtask 里：runSync 一开头就 setState，
+    // 在 effect 体里直接调它会触发级联渲染
+    queueMicrotask(() => void runSync());
     return () => boxes.forEach((b) => b.replaceWith(b.cloneNode(true)));
-  }, [slug, key]);
+  }, [slug, key, runSync]);
+
+  // 手机切回标签页时把别人的改动拉下来
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") void runSync();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [runSync]);
+
+  async function onConnect() {
+    setToken(tokenDraft);
+    setSyncState("busy");
+    const r = await connect();
+    if (!r.ok) {
+      setSyncState("error");
+      setSyncMsg(r.error || "连不上");
+      return;
+    }
+    setSyncMsg("");
+    setTokenDraft("");
+    setPanel(false);
+    await runSync(true);
+  }
 
   useEffect(() => {
     const doc = document.querySelector(".md-body") as HTMLElement | null;
@@ -131,6 +239,15 @@ export default function ArticleReader({ slug }: { slug: string }) {
     }
   }
 
+  const pill =
+    syncState === "off"
+      ? "开启同步"
+      : syncState === "busy"
+        ? "同步中…"
+        : syncState === "error"
+          ? "同步失败"
+          : "已同步";
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 h-[2px] z-[70] pointer-events-none">
@@ -156,6 +273,17 @@ export default function ArticleReader({ slug }: { slug: string }) {
         >
           A
         </button>
+        <button
+          type="button"
+          onClick={() => setPanel((v) => !v)}
+          className={`px-3 py-1 rounded-full border border-[var(--border-subtle)] ${
+            syncState === "error" || syncState === "off"
+              ? "text-[var(--text-tertiary)]"
+              : "text-[var(--accent-primary)]"
+          } hover:border-[var(--accent-primary)]`}
+        >
+          {pill}
+        </button>
         <span ref={doneRef} />
         {resume !== null && (
           <button
@@ -175,6 +303,73 @@ export default function ArticleReader({ slug }: { slug: string }) {
           </button>
         )}
       </div>
+
+      {panel && (
+        <div className="mb-6 px-4 py-3 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] space-y-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+          <p className="text-[var(--text-primary)]">勾选状态同步</p>
+          <p>
+            打卡状态存在<b>你自己一个不公开的 gist</b> 里，网页直接去 GitHub 读它，所以手机和电脑看到的是同一份。
+            token 只留在这台设备的浏览器里，不在网站代码里 —— 别人打开这个页面既看不到你的勾选，也改不动。
+          </p>
+          <p>
+            第一次用：打开{" "}
+            <a
+              className="text-[var(--accent-primary)] underline"
+              href="https://github.com/settings/personal-access-tokens/new"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub 新建 token 的页面
+            </a>
+            ，权限<b>只勾 Gists 的 Read and write</b>，仓库权限一个都别给，过期设 Never，然后把那串粘进来。
+            手机上同样粘一次就行 —— gist 会被自动找到，不用传地址、不用建文件。
+          </p>
+          {syncState === "off" ? (
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="password"
+                value={tokenDraft}
+                onChange={(e) => setTokenDraft(e.target.value)}
+                placeholder="粘贴 token"
+                className="flex-1 min-w-[14rem] px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] bg-transparent text-[var(--text-primary)]"
+              />
+              <button
+                type="button"
+                onClick={onConnect}
+                disabled={!tokenDraft.trim()}
+                className="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)] text-white disabled:opacity-40"
+              >
+                连接
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => runSync(true)}
+                className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]"
+              >
+                立即同步
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  forget();
+                  setAt(0);
+                  setSyncMsg("");
+                  setSyncState("off");
+                }}
+                className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[var(--text-tertiary)] hover:border-[var(--accent-primary)]"
+              >
+                在这台设备关闭
+              </button>
+            </div>
+          )}
+          <p className="text-[var(--text-tertiary)]">
+            {syncMsg || (at ? `上次同步 ${new Date(at).toLocaleTimeString()}` : "还没同步过")}
+          </p>
+        </div>
+      )}
     </>
   );
 }
