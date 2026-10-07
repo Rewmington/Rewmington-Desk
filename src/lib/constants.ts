@@ -1,34 +1,10 @@
-import type { MusicTrack, Project, Friend, Photo } from "@/types";
-import { PROJECT_STATUSES } from "@/types";
+import type { MusicTrack, Friend, Photo } from "@/types";
 import musicData from "@/content/music.json";
-import projectsData from "@/content/projects.json";
 import photosData from "@/content/photos.json";
 import friendsData from "@/content/friends.json";
 
-// 这些 JSON 是在 GitHub 网页上手改的，没有类型检查兜底。这个字段写错只会让界面
-// 静默降级（状态点变灰），所以在构建期直接报错。
-function assertAllowed(
-  field: string,
-  file: string,
-  allowed: readonly string[],
-  items: unknown[],
-) {
-  items.forEach((item, i) => {
-    const value = (item as Record<string, unknown>)[field];
-    if (!allowed.includes(value as string)) {
-      throw new Error(
-        `src/content/${file} 第 ${i + 1} 项的 ${field} 是 ${JSON.stringify(
-          value,
-        )}，只能是：${allowed.join(" / ")}`,
-      );
-    }
-  });
-}
-
-assertAllowed("status", "projects.json", PROJECT_STATUSES, projectsData);
-
+// 项目不在这里：那份清单构建期从 GitHub 抓，见 src/lib/projects.ts
 export const musicTracks = musicData as MusicTrack[];
-export const projects = projectsData as Project[];
 export const photos = photosData as Photo[];
 export const friends = friendsData as Friend[];
 

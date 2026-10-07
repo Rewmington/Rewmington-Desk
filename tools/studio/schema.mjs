@@ -7,6 +7,8 @@ export const SCHEMA = {
     label: "项目",
     file: "projects.json",
     labelField: "name",
+    note:
+      "这一栏只是覆盖表：写进度、状态、想改的显示名。其余公开仓库构建时会自动出现在项目栏，不用在这里登记。",
     fields: [
       ["name", "名称", "text"],
       ["description", "简介", "textarea"],

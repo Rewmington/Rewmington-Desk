@@ -103,7 +103,9 @@ order: 10
       // 字段定义与 tools/studio/schema.mjs 有意保持同形。那份是本地发布台的权威定义，
       // 这里这份只负责画表单和给提示，真正的硬校验在构建期 src/lib/constants.ts。
       const SCHEMA = {
-        projects: { label:"项目", file:"projects.json", labelField:"name", fields:[
+        projects: { label:"项目", file:"projects.json", labelField:"name",
+          note:"这一栏只是覆盖表：写进度、状态、或想改的显示名。其余 GitHub 公开仓库会在构建时自动出现在项目栏，不用到这里登记。",
+          fields:[
           ["name","名称","text"], ["description","简介","textarea"], ["url","链接","text"],
           ["tags","技术栈","list"], ["progress","进度 %","number"], ["status","状态","enum",["编码中","规划中","已完成","测试中"]]] },
         photos: { label:"照片", file:"photos.json", id:true, labelField:"src", fields:[
@@ -239,6 +241,7 @@ order: 10
         }
         const key = S.tab;
         $("body").innerHTML =
+          (SCHEMA[key].note ? `<p class="hint" style="margin:0 0 12px">${esc(SCHEMA[key].note)}</p>` : "") +
           (S.data[key].length
             ? S.data[key].map((row, i) => {
                 const title = row.title || row.name || row.caption || "（未命名）";

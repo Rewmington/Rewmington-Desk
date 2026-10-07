@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    # 每天重新构建一次，不 push 也能把 GitHub 上新建的仓库抓进项目栏。
+    # cron 按 UTC 计，20:20 就是你这边凌晨 04:20。
+    - cron: "20 20 * * *"
   workflow_dispatch:
 
 permissions:

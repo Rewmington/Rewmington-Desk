@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node tools/publish-content.mjs",
+    "build": "node tools/fetch-repos.mjs && next build && node tools/publish-content.mjs",
     "start": "next start",
     "lint": "eslint",
     "studio": "node tools/studio/server.mjs"

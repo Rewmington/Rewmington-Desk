@@ -324,7 +324,7 @@
         const key = S.tab;
         const schema = S.schema[key];
         $("heading").textContent = schema.label;
-        $("sub").textContent = `对应文件 src/content/${schema.file} · 共 ${S.data[key].length} 条`;
+        $("sub").textContent = `对应文件 src/content/${schema.file} · 共 ${S.data[key].length} 条${schema.note ? " · " + schema.note : ""}`;
         $("body").innerHTML =
           (S.data[key].length
             ? S.data[key]

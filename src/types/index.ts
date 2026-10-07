@@ -30,8 +30,13 @@ export interface Project {
   description: string;
   tags: string[];
   url: string;
-  progress: number; // 0-100
+  /** 手工设的完成度。GitHub 仓库本身没有这个概念，没被覆盖条目就是 null，界面不画进度条 */
+  progress: number | null;
   status: ProjectStatus;
+  /** 以下三项来自 GitHub，手工项目没有 */
+  language?: string;
+  stars?: number;
+  pushedAt?: string;
 }
 
 export interface Friend {

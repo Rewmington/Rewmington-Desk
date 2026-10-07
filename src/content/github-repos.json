@@ -1,0 +1,61 @@
+{
+  "fetchedAt": "2026-10-07T09:12:54.382Z",
+  "repos": [
+    {
+      "name": "Rewmington-Desk",
+      "description": "个人工作台",
+      "url": "https://github.com/Rewmington/Rewmington-Desk",
+      "language": "TypeScript",
+      "topics": [],
+      "stars": 0,
+      "pushedAt": "2026-10-07T08:44:12Z",
+      "archived": false
+    },
+    {
+      "name": "medtrack",
+      "description": "",
+      "url": "https://github.com/Rewmington/medtrack",
+      "language": "Dart",
+      "topics": [],
+      "stars": 0,
+      "pushedAt": "2026-10-03T09:27:05Z",
+      "archived": false
+    },
+    {
+      "name": "SoundBeam",
+      "description": "",
+      "url": "https://github.com/Rewmington/SoundBeam",
+      "language": "Python",
+      "topics": [],
+      "stars": 1,
+      "pushedAt": "2026-09-08T10:40:40Z",
+      "archived": false
+    },
+    {
+      "name": "Personal-Workspace",
+      "description": "局域网工作台",
+      "url": "https://github.com/Rewmington/Personal-Workspace",
+      "language": "Python",
+      "topics": [],
+      "stars": 0,
+      "pushedAt": "2026-09-05T02:30:14Z",
+      "archived": false
+    },
+    {
+      "name": "deskwhale-harness",
+      "description": "DeskWhale: a desktop-pet edition of DeepSeek Harness with a floating whale, frosted glass UI, and approval reminders. 基于 DeepSeek Harness 的桌宠改造版：悬浮鲸鱼、磨砂窗口、审批与提问提醒。",
+      "url": "https://github.com/Rewmington/deskwhale-harness",
+      "language": "TypeScript",
+      "topics": [
+        "dsh",
+        "dsh-plugin",
+        "dsh-plugin-desktop",
+        "dsh-plugin-market",
+        "dsh-plugins"
+      ],
+      "stars": 1,
+      "pushedAt": "2026-08-18T02:18:15Z",
+      "archived": false
+    }
+  ]
+}

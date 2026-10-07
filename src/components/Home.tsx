@@ -12,14 +12,21 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-import { photos, projects, musicTracks } from "@/lib/constants";
-import type { Photo } from "@/types";
+import { photos, musicTracks } from "@/lib/constants";
+import type { Photo, Project } from "@/types";
 
 /**
- * 首页的 Bento 仪表盘。文章数由外层 server 组件算好传进来 —— 内容源是
- * src/content/notes/*.md，只有构建期能用 node:fs 读，而这里的模块会被打进浏览器包。
+ * 首页的 Bento 仪表盘。文章数和项目清单都由外层 server 组件算好传进来 —— 它们的真源
+ * 是仓库里的 md 文件和 GitHub 公开仓库，只有构建期能用 node:fs / 发请求，而这里的模块
+ * 会被打进浏览器包。
  */
-export default function Home({ noteCount }: { noteCount: number }) {
+export default function Home({
+  noteCount,
+  projects,
+}: {
+  noteCount: number;
+  projects: Project[];
+}) {
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
 
   return (
@@ -39,7 +46,7 @@ export default function Home({ noteCount }: { noteCount: number }) {
 
           {/* 项目进度追踪 - 2x1 */}
           <StaggerItem className="md:col-span-2">
-            <ProjectTracker />
+            <ProjectTracker items={projects} />
           </StaggerItem>
 
           {/* 音乐播放器 - 2x1 */}
