@@ -56,8 +56,9 @@ export default function ProjectsPage() {
                       <h3 className="text-[var(--text-primary)] font-bold text-lg mb-2">
                         {project.name}
                       </h3>
+                      {/* 没填描述的仓库就留白，这一格仍然占位是为了让同一行的卡片标签对齐底部 */}
                       <p className="text-[var(--text-secondary)] text-sm flex-1 mb-4">
-                        {project.description || "（仓库没填描述）"}
+                        {project.description}
                       </p>
                       {meta.length > 0 && (
                         <p className="text-[11px] text-[var(--text-tertiary)] mb-3 tabular-nums">

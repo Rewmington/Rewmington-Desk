@@ -30,7 +30,9 @@ export default function ProjectTracker({ items }: { items: Project[] }) {
           🚀 暂无项目
         </div>
       ) : (
-        <div className="flex-1 space-y-4 overflow-auto">
+        /* 桌面端这张卡不能跟着条目数长高：它撑一行，左边那张跨两行的个人卡就会被拉成两倍长。
+           所以宽屏限高、超出就内部滚动（窄屏是单列，各卡独立成行，不需要限）。 */
+        <div className="flex-1 space-y-4 overflow-auto md:max-h-[13rem]">
           {items.map((project, index) => {
             const statusStyle = statusColors[project.status] || { bg: "bg-slate-400/20 text-slate-400", dot: "bg-slate-400" };
             return (
@@ -43,9 +45,12 @@ export default function ProjectTracker({ items }: { items: Project[] }) {
                       {project.name}
                     </span>
                   </div>
-                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium shrink-0 ${statusStyle.bg}`}>
-                    {project.status}
-                  </span>
+                  {/* 「编码中」现在等于"没特别要说的"：每个自动抓来的仓库都是它，所以不显示 */}
+                  {project.status !== "编码中" && (
+                    <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium shrink-0 ${statusStyle.bg}`}>
+                      {project.status}
+                    </span>
+                  )}
                 </div>
 
                 {typeof project.progress === "number" ? (
@@ -77,9 +82,9 @@ export default function ProjectTracker({ items }: { items: Project[] }) {
                 ) : (
                   /* 自动抓来的仓库没有"完成度"这个东西，那就只报事实：语言、star、最近动过 */
                   <>
-                    <p className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">
-                      {project.description || "（仓库没填描述）"}
-                    </p>
+                    {project.description && (
+                      <p className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">{project.description}</p>
+                    )}
                     <p className="text-[11px] text-[var(--text-tertiary)] mt-1 tabular-nums">
                       {[project.language, project.stars ? `★${project.stars}` : "", pushed(project.pushedAt)]
                         .filter(Boolean)
