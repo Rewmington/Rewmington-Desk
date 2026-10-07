@@ -67,6 +67,8 @@
           <li>等约 40 秒 Actions 构建完，线上就更新了</li>
         </ol>
         加图片：<a id="uploadLink" href="#">到这里拖进文件</a>，上传完把它的地址填回对应字段。
+        <br />
+        <b>文章</b>那一栏是只读清单：正文存在仓库的 <code>src/content/notes/*.md</code> 里，点「编辑正文」直接去改那一个文件。
       </div>
 
       <div id="errs"></div>
@@ -83,13 +85,24 @@
     <script type="module">
       const REPO = "Rewmington/Rewmington-Desk";
       const BASE = `https://github.com/${REPO}`;
+      const NOTES_DIR = "src/content/notes";
+      const NOTE_TEMPLATE = `---
+title: 标题
+description: 一句话摘要，列表页会显示
+date: "2026-10-07"
+kind: 笔记
+tags: [标签1, 标签2]
+order: 10
+---
+
+# 标题
+
+正文写在这里。二级/三级标题会自动进目录，\`- [ ] 条目\` 会变成能勾选的方框。
+`;
 
       // 字段定义与 tools/studio/schema.mjs 有意保持同形。那份是本地发布台的权威定义，
       // 这里这份只负责画表单和给提示，真正的硬校验在构建期 src/lib/constants.ts。
       const SCHEMA = {
-        articles: { label:"文章", file:"articles.json", id:true, labelField:"title", fields:[
-          ["title","标题","text"], ["description","摘要","textarea"], ["cover","封面","image"],
-          ["date","日期","date"], ["tags","标签","list"], ["variant","版式","enum",["image","text-overlay"]]] },
         projects: { label:"项目", file:"projects.json", labelField:"name", fields:[
           ["name","名称","text"], ["description","简介","textarea"], ["url","链接","text"],
           ["tags","技术栈","list"], ["progress","进度 %","number"], ["status","状态","enum",["编码中","规划中","已完成","测试中"]]] },
@@ -103,7 +116,7 @@
       const KEYS = Object.keys(SCHEMA);
       const PROFILE_FIELDS = [["authorName","名字","text"], ["bio","简介","textarea"], ["avatarUrl","头像路径","image"], ["techIntro","技术栈介绍","textarea"], ["techStack","技术栈","list"]];
 
-      const S = { data: {}, original: {}, tab: "articles" };
+      const S = { data: {}, original: {}, notes: [], tab: "notes" };
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
       // 与 tools/studio/schema.mjs 的 stringify 同规则：纯字符串数组折回一行，
@@ -119,7 +132,7 @@
         fetch(`/content/${name}.json?cb=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
 
       async function boot() {
-        const manifest = (await read("manifest")) || { files: [...KEYS, "profile"] };
+        const manifest = (await read("manifest")) || { files: ["notes", ...KEYS, "profile"] };
         const loaded = {};
         await Promise.all(
           manifest.files.map(async (n) => {
@@ -129,6 +142,9 @@
         );
         if (!loaded.profile) loaded.profile = { authorName: "", bio: "", avatarUrl: "" };
         for (const k of KEYS) if (!Array.isArray(loaded[k])) loaded[k] = [];
+        // 文章的正体是仓库里的 .md 文件，不是 JSON 表单，所以这里只当只读清单用
+        S.notes = Array.isArray(loaded.notes) ? loaded.notes : [];
+        delete loaded.notes;
         S.data = structuredClone(loaded);
         S.original = loaded;
         $("uploadLink").href = `${BASE}/upload/main/public/images/posts/`;
@@ -176,12 +192,46 @@
         return out.join("");
       }
 
+      // 文章的正体是仓库里的 src/content/notes/*.md，构建期就渲染成静态页了，
+      // 所以这一栏只读：改正文点「编辑正文」，加文章复制模板再去 GitHub 新建。
+      function notesPanel() {
+        const edit = (slug) => `${BASE}/edit/main/${NOTES_DIR}/${encodeURIComponent(slug)}.md`;
+        const rows = S.notes.length
+          ? S.notes
+              .map(
+                (n) => `<div class="card">
+                  <div class="head"><span class="t">${esc(n.title)}</span>
+                    <span class="n">${esc(n.kind)} · ${esc(n.date)}</span>
+                    <a class="act" style="text-decoration:none" target="_blank" rel="noopener" href="${edit(n.slug)}">编辑正文</a></div>
+                  <p class="hint">${esc(n.description)}</p>
+                  <p class="hint"><a href="/articles/${encodeURIComponent(n.slug)}/">看线上这一篇</a> · 文件名 ${esc(n.slug)}.md</p>
+                </div>`
+              )
+              .join("")
+          : `<div class="empty">清单是空的。刚加的文章要等一次构建完才会出现在这里。</div>`;
+        return (
+          rows +
+          `<div class="card"><div class="head"><span class="t">新文章</span>
+            <button class="act" id="copyTpl">复制模板</button>
+            <a class="act" style="text-decoration:none" target="_blank" rel="noopener" href="${BASE}/new/main/${NOTES_DIR}">在 GitHub 新建</a></div>
+            <textarea readonly spellcheck="false" style="min-height:170px">${esc(NOTE_TEMPLATE)}</textarea>
+            <p class="hint">文件名用小写英文，构建后就对应 /articles/文件名/ 这一页。</p></div>`
+        );
+      }
+
       let _i = 0;
       function render() {
         $("tabs").innerHTML =
+          `<button data-tab="notes" class="${S.tab === "notes" ? "on" : ""}">文章 ${S.notes.length}</button>` +
           KEYS.map((k) => `<button data-tab="${k}" class="${k === S.tab ? "on" : ""}">${esc(SCHEMA[k].label)} ${S.data[k].length}</button>`).join("") +
           `<button data-tab="profile" class="${S.tab === "profile" ? "on" : ""}">个人资料</button>`;
 
+        if (S.tab === "notes") {
+          $("body").innerHTML = notesPanel();
+          bind();
+          $("copyTpl").onclick = (e) => copy(NOTE_TEMPLATE, e.currentTarget);
+          return;
+        }
         if (S.tab === "profile") {
           $("body").innerHTML = `<div class="card">${PROFILE_FIELDS.map((f) => ((S.i = -1), field("profile", -1, f))).join("")}</div>`;
           bind();

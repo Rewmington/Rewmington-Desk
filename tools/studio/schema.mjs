@@ -3,20 +3,6 @@
 // 而构建失败 = 站点悄悄停在旧版本，比报错更难查。
 
 export const SCHEMA = {
-  articles: {
-    label: "文章",
-    file: "articles.json",
-    id: true,
-    labelField: "title",
-    fields: [
-      ["title", "标题", "text"],
-      ["description", "摘要", "textarea"],
-      ["cover", "封面", "image"],
-      ["date", "日期", "date"],
-      ["tags", "标签", "list"],
-      ["variant", "版式", "enum", ["image", "text-overlay"]],
-    ],
-  },
   projects: {
     label: "项目",
     file: "projects.json",

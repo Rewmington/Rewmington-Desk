@@ -7,7 +7,7 @@ import { marked } from "marked";
 /**
  * 知识库内容源：src/content/notes/*.md
  *
- * 为什么用 md 而不是像 articles.json 那样用 JSON：讲义是长文，带表格和代码块，
+ * 为什么用 md 而不是 JSON：讲义是长文，带表格和代码块，
  * 在 JSON 字符串里写这些等于跟转义搏斗。md 可以单独打开编辑，也能被 /admin 之外的
  * 任何编辑器改。
  *

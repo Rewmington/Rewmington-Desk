@@ -1,9 +1,9 @@
 "use client";
 
 import siteConfig from "../../siteConfig";
-import { articles, photos } from "@/lib/constants";
+import { photos } from "@/lib/constants";
 
-export default function ProfileCard() {
+export default function ProfileCard({ noteCount }: { noteCount: number }) {
   return (
     <div className="bg-[var(--bg-card)] backdrop-blur-[20px] saturate-[1.8] border border-[var(--border-card)] rounded-3xl p-5 md:p-6 h-full shadow-[var(--shadow-card)] flex flex-col">
       {/* OS 窗口标题栏 */}
@@ -64,7 +64,7 @@ export default function ProfileCard() {
         {/* 底部数据条 */}
         <div className="grid grid-cols-2 gap-2 w-full mt-2">
           <div className="bg-[var(--bg-subtle)] rounded-2xl px-2 py-2 text-center backdrop-blur-sm">
-            <div className="text-lg font-bold text-[var(--text-primary)]">{articles.length}</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{noteCount}</div>
             <div className="text-[10px] text-[var(--text-tertiary)]">文章</div>
           </div>
           <div className="bg-[var(--bg-subtle)] rounded-2xl px-2 py-2 text-center backdrop-blur-sm">

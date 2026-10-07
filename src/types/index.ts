@@ -1,16 +1,3 @@
-export const ARTICLE_VARIANTS = ["image", "text-overlay"] as const;
-export type ArticleVariant = (typeof ARTICLE_VARIANTS)[number];
-
-export interface Article {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
-  date: string;
-  tags: string[];
-  variant: ArticleVariant;
-}
-
 export interface MusicTrack {
   id: string;
   title: string;

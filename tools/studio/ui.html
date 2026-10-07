@@ -112,7 +112,7 @@
       const REMOTE = location.pathname.startsWith("/admin");
       const API = REMOTE ? "/admin/api" : "/api";
 
-      const S = { schema: {}, keys: [], data: {}, tab: "articles", dirty: false, images: {}, previews: {} };
+      const S = { schema: {}, keys: [], data: {}, tab: "", dirty: false, images: {}, previews: {} };
 
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -440,6 +440,8 @@
         const [sc, data] = await Promise.all([api("/schema"), api("/content")]);
         S.schema = sc.schema;
         S.keys = sc.keys;
+        // 分类是服务端给的，删掉某个分类后默认选中的那一项就不存在了，否则会渲染出 undefined
+        if (!S.keys.includes(S.tab)) S.tab = S.keys[0];
         S.data = data;
         render();
         refreshStatus();

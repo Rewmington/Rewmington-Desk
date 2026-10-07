@@ -1,11 +1,9 @@
 import Link from "next/link";
-import ArticleCard from "@/components/ArticleCard";
 import GlassCard from "@/components/GlassCard";
 import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-import { articles } from "@/lib/constants";
 import { listNotes } from "@/lib/notes";
 
 export const metadata = {
@@ -68,20 +66,7 @@ export default function ArticlesPage() {
           </StaggerItem>
         )}
 
-        {articles.length > 0 ? (
-          <StaggerItem>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {articles.map((article, index) => (
-                <StaggerItem
-                  key={article.id}
-                  className={index === 0 ? "md:col-span-2" : ""}
-                >
-                  <ArticleCard article={article} />
-                </StaggerItem>
-              ))}
-            </div>
-          </StaggerItem>
-        ) : notes.length === 0 ? (
+        {notes.length === 0 && (
           <StaggerItem>
             <GlassCard className="p-12 md:p-20 text-center">
               <div className="text-6xl mb-4">📝</div>
@@ -89,12 +74,11 @@ export default function ArticlesPage() {
                 还没有文章
               </h3>
               <p className="text-[var(--text-tertiary)] text-sm">
-                往 src/content/notes/ 放一个带 frontmatter 的 .md，或编辑
-                src/content/articles.json
+                往 src/content/notes/ 放一个带 frontmatter 的 .md
               </p>
             </GlassCard>
           </StaggerItem>
-        ) : null}
+        )}
       </StaggerContainer>
     </main>
   );
