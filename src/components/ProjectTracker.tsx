@@ -1,18 +1,29 @@
 "use client";
 
-import { motion } from "framer-motion";
 import type { Project } from "@/types";
 
-const statusColors: Record<string, { bg: string; dot: string }> = {
-  "编码中": { bg: "bg-[var(--accent-secondary)]/20 text-[var(--accent-secondary)]", dot: "bg-[var(--accent-secondary)]" },
-  "规划中": { bg: "bg-amber-400/20 text-amber-400", dot: "bg-amber-400" },
-  "已完成": { bg: "bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]", dot: "bg-[var(--accent-primary)]" },
-  "测试中": { bg: "bg-violet-400/20 text-violet-400", dot: "bg-violet-400" },
+const statusDot: Record<string, string> = {
+  "编码中": "bg-[var(--accent-secondary)]",
+  "规划中": "bg-amber-400",
+  "已完成": "bg-[var(--accent-primary)]",
+  "测试中": "bg-violet-400",
 };
 
-/** GitHub 的最近 push 只取到「哪天」，够判断一个项目是不是还活着 */
-function pushed(iso?: string) {
-  return iso ? iso.slice(0, 10) : "";
+/**
+ * 一行一个项目：左边名字，右边一个数就够。
+ * 有手工进度就报进度，否则报仓库事实（语言 / star / 最近动过）。
+ * 描述不在这张卡里 —— 它长短不可控，两行截断会把中文尾巴吃掉，完整描述在 /projects 页。
+ */
+function rightSide(p: Project) {
+  if (typeof p.progress === "number") return `${p.progress}%`;
+  return [
+    p.status !== "编码中" ? p.status : "",
+    p.language,
+    p.stars ? `★${p.stars}` : "",
+    p.pushedAt ? p.pushedAt.slice(5, 10) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export default function ProjectTracker({ items }: { items: Project[] }) {
@@ -30,71 +41,20 @@ export default function ProjectTracker({ items }: { items: Project[] }) {
           🚀 暂无项目
         </div>
       ) : (
-        /* 桌面端这张卡不能跟着条目数长高：它撑一行，左边那张跨两行的个人卡就会被拉成两倍长。
-           所以宽屏限高、超出就内部滚动（窄屏是单列，各卡独立成行，不需要限）。 */
-        <div className="flex-1 space-y-4 overflow-auto md:max-h-[13rem]">
-          {items.map((project, index) => {
-            const statusStyle = statusColors[project.status] || { bg: "bg-slate-400/20 text-slate-400", dot: "bg-slate-400" };
-            return (
-              <div key={project.url}>
-                {/* 项目头部 */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-2 h-2 rounded-full ${statusStyle.dot} shrink-0`} />
-                    <span className="text-sm font-semibold text-[var(--text-primary)] truncate">
-                      {project.name}
-                    </span>
-                  </div>
-                  {/* 「编码中」现在等于"没特别要说的"：每个自动抓来的仓库都是它，所以不显示 */}
-                  {project.status !== "编码中" && (
-                    <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium shrink-0 ${statusStyle.bg}`}>
-                      {project.status}
-                    </span>
-                  )}
-                </div>
-
-                {typeof project.progress === "number" ? (
-                  <>
-                    {/* 动画进度条 */}
-                    <div className="w-full h-2.5 bg-[var(--bg-subtle)] rounded-full overflow-hidden progress-shine">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${project.progress}%` }}
-                        transition={{
-                          duration: 1.5,
-                          delay: 0.3 + index * 0.2,
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                        }}
-                      />
-                    </div>
-
-                    {/* 进度 + 描述 */}
-                    <div className="flex items-center justify-between mt-1.5">
-                      <p className="text-[11px] text-[var(--text-tertiary)] truncate flex-1 mr-2">
-                        {project.description}
-                      </p>
-                      <span className="text-[11px] text-[var(--text-tertiary)] tabular-nums shrink-0">
-                        {project.progress}%
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  /* 自动抓来的仓库没有"完成度"这个东西，那就只报事实：语言、star、最近动过 */
-                  <>
-                    {project.description && (
-                      <p className="text-[11px] text-[var(--text-tertiary)] line-clamp-2">{project.description}</p>
-                    )}
-                    <p className="text-[11px] text-[var(--text-tertiary)] mt-1 tabular-nums">
-                      {[project.language, project.stars ? `★${project.stars}` : "", pushed(project.pushedAt)]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </>
-                )}
-              </div>
-            );
-          })}
+        <div className="flex-1 space-y-2.5 overflow-auto">
+          {items.map((project) => (
+            <div key={project.url} className="flex items-center gap-2 min-w-0">
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[project.status] || "bg-slate-400"}`}
+              />
+              <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                {project.name}
+              </span>
+              <span className="ml-auto shrink-0 text-[11px] text-[var(--text-tertiary)] tabular-nums">
+                {rightSide(project)}
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>
