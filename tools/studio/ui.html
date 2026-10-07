@@ -203,7 +203,7 @@
         if (kind === "textarea") return `<label class="f"><span>${esc(label)}</span><textarea id="${id}" oninput="${on}">${esc(value)}</textarea></label>`;
         if (kind === "enum") return `<label class="f"><span>${esc(label)}</span><select id="${id}" onchange="${on}">${allowed.map((o) => `<option ${o === value ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
         if (kind === "list") return `<label class="f"><span>${esc(label)}（用逗号分隔）</span><input type="text" id="${id}" value="${esc((value || []).join(", "))}" oninput="${on}" /></label>`;
-        if (kind === "number") return `<label class="f"><span>${esc(label)}</span><input type="number" min="0" max="100" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
+        if (kind === "number") return `<label class="f"><span>${esc(label)}${field[4] ? "（留空=不覆盖）" : ""}</span><input type="number" min="0" max="100" id="${id}" value="${esc(value ?? "")}" oninput="${on}" /></label>`;
         if (kind === "date") return `<label class="f"><span>${esc(label)}</span><input type="date" id="${id}" value="${esc(value)}" oninput="${on}" /></label>`;
         if (kind === "image") {
           const shown = previewOf(value);
@@ -221,7 +221,7 @@
         const field = S.schema[key].fields.find((f) => f[0] === name);
         let v = el.value;
         if (field[2] === "list") v = v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-        if (field[2] === "number") v = Number(v);
+        if (field[2] === "number") v = el.value === "" ? null : Number(el.value);
         S.data[key][idx][name] = v;
         S.dirty = true;
         if (name === "title" || name === "name") {
@@ -274,8 +274,8 @@
 
       function addItem(key) {
         const blank = { id: Date.now().toString(36) };
-        for (const [name, , kind, allowed] of S.schema[key].fields) {
-          blank[name] = kind === "list" ? [] : kind === "number" ? 0 : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
+        for (const [name, , kind, allowed, optional] of S.schema[key].fields) {
+          blank[name] = kind === "list" ? [] : kind === "number" ? (optional ? null : 0) : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
         }
         S.data[key].push(blank);
         S.dirty = true;

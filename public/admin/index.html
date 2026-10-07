@@ -107,7 +107,7 @@ order: 10
           note:"这一栏只是覆盖表：写进度、状态、或想改的显示名。其余 GitHub 公开仓库会在构建时自动出现在项目栏，不用到这里登记。",
           fields:[
           ["name","名称","text"], ["description","简介","textarea"], ["url","链接","text"],
-          ["tags","技术栈","list"], ["progress","进度 %","number"], ["status","状态","enum",["编码中","规划中","已完成","测试中"]]] },
+          ["tags","技术栈","list"], ["progress","进度 %","number",null,true], ["status","状态","enum",["编码中","规划中","已完成","测试中"]]] },
         photos: { label:"照片", file:"photos.json", id:true, labelField:"src", fields:[
           ["src","图片","image"], ["caption","说明","text"], ["date","日期","date"], ["location","地点","text"]] },
         friends: { label:"友链", file:"friends.json", labelField:"name", fields:[
@@ -169,7 +169,7 @@ order: 10
         if (kind === "textarea") return `<label class="f"><span>${esc(label)}</span><textarea ${on}>${esc(v)}</textarea></label>`;
         if (kind === "enum") return `<label class="f"><span>${esc(label)}</span><select ${on}>${allowed.map((o) => `<option ${o === v ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`;
         if (kind === "list") return `<label class="f"><span>${esc(label)}（逗号分隔）</span><input type="text" ${on} value="${esc((v || []).join(", "))}" /></label>`;
-        if (kind === "number") return `<label class="f"><span>${esc(label)}</span><input type="number" min="0" max="100" ${on} value="${esc(v)}" /></label>`;
+        if (kind === "number") return `<label class="f"><span>${esc(label)}${f[4] ? "（留空=不覆盖）" : ""}</span><input type="number" min="0" max="100" ${on} value="${esc(v ?? "")}" /></label>`;
         if (kind === "date") return `<label class="f"><span>${esc(label)}</span><input type="date" ${on} value="${esc(v)}" /></label>`;
         if (kind === "image")
           return `<label class="f"><span>${esc(label)}（先<a href="${esc(String(v).startsWith("/images/posts/") ? BASE + "/upload/main/public/images/posts/" : BASE + "/upload/main/public/images/posts/")}" target="_blank" rel="noopener">上传</a>，再把地址粘进来）</span>
@@ -263,7 +263,7 @@ order: 10
             const def = (k === "profile" ? PROFILE_FIELDS : SCHEMA[k].fields).find((x) => x[0] === f);
             let v = el.value;
             if (def[2] === "list") v = v.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-            if (def[2] === "number") v = Number(v);
+            if (def[2] === "number") v = el.value === "" ? null : Number(v);
             item(k, Number(i))[f] = v;
           };
         });
@@ -272,8 +272,8 @@ order: 10
         if (add)
           add.onclick = () => {
             const blank = { id: Date.now().toString(36) };
-            for (const [n, , kind, allowed] of SCHEMA[S.tab].fields)
-              blank[n] = kind === "list" ? [] : kind === "number" ? 0 : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
+            for (const [n, , kind, allowed, optional] of SCHEMA[S.tab].fields)
+              blank[n] = kind === "list" ? [] : kind === "number" ? (optional ? null : 0) : kind === "enum" ? allowed[0] : kind === "date" ? new Date().toISOString().slice(0, 10) : "";
             S.data[S.tab].push(blank);
             render();
           };
@@ -295,9 +295,13 @@ order: 10
         for (const key of KEYS) {
           const schema = SCHEMA[key];
           S.data[key].forEach((row, i) => {
-            for (const [f, label, kind, allowed] of schema.fields) {
+            for (const [f, label, kind, allowed, optional] of schema.fields) {
               const v = row[f];
-              if (v === undefined) { errors.push(`${schema.label} 第 ${i + 1} 项缺「${label}」`); continue; }
+              // 标了 optional 的字段留空有含义（项目「进度 %」留空 = 不覆盖，跟着 GitHub 走）
+              if (v === undefined || v === null) {
+                if (!optional) errors.push(`${schema.label} 第 ${i + 1} 项缺「${label}」`);
+                continue;
+              }
               if (f === schema.labelField && !String(v).trim())
                 errors.push(`${schema.label} 第 ${i + 1} 项是空的（「${label}」没填）`);
               if (kind === "enum" && !allowed.includes(v))

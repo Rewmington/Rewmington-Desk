@@ -14,7 +14,7 @@ export const SCHEMA = {
       ["description", "简介", "textarea"],
       ["url", "链接", "text"],
       ["tags", "技术栈", "list"],
-      ["progress", "进度 %", "number"],
+      ["progress", "进度 %", "number", null, true],
       ["status", "状态", "enum", ["编码中", "规划中", "已完成", "测试中"]],
     ],
   },
@@ -64,10 +64,12 @@ export function validate(key, items) {
   const schema = SCHEMA[key];
   const errors = [];
   items.forEach((item, i) => {
-    for (const [field, label, kind, allowed] of schema.fields) {
+    for (const [field, label, kind, allowed, optional] of schema.fields) {
       const value = item[field];
       if (value === undefined || value === null) {
-        errors.push(`${schema.label} 第 ${i + 1} 项缺少「${label}」字段`);
+        // 标了 optional 的字段留空是有含义的：项目的「进度 %」留空 = 不覆盖，
+        // 这一条就和其他仓库一样只显示 GitHub 给得出的事实。
+        if (!optional) errors.push(`${schema.label} 第 ${i + 1} 项缺少「${label}」字段`);
         continue;
       }
       // 点了「新增」却没填就保存，会在页面上留下一张什么都没有的卡片，

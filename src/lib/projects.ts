@@ -46,7 +46,10 @@ function readRepos(): Repo[] {
   }
 }
 
-const overrides = overridesRaw as Project[];
+/** 覆盖表：只有 name 和 url 是必须的，其余留空就沿用 GitHub 给出来的值 */
+type Override = Partial<Project> & Pick<Project, "name" | "url">;
+
+const overrides = overridesRaw as Override[];
 
 // 和之前一样在构建期硬校验：这份 JSON 是在 GitHub 网页上手改的，写错状态宁可构建报错，
 // 也不要界面上静默出现一个灰点。
@@ -82,7 +85,20 @@ const fromGitHub: Project[] = readRepos().map((r) => {
   };
 });
 
-const manual = overrides.filter((o) => !matched.has(repoKey(o.url)));
+// GitHub 上没有的条目 = 手工项目（没开源的东西），补齐字段后排在自动项后面
+const manual: Project[] = overrides
+  .filter((o) => !matched.has(repoKey(o.url)))
+  .map((o) => ({
+    name: o.name,
+    description: o.description ?? "",
+    tags: o.tags ?? [],
+    url: o.url,
+    progress: typeof o.progress === "number" ? o.progress : null,
+    status: o.status ?? "编码中",
+    language: o.language ?? "",
+    stars: o.stars ?? 0,
+    pushedAt: o.pushedAt ?? "",
+  }));
 
 export function listProjects(): Project[] {
   return [...fromGitHub, ...manual];
