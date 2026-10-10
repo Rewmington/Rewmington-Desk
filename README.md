@@ -40,16 +40,20 @@
 
 ```
 src/
+├── siteConfig.ts           # 站点级配置：作者名/简介取自 profile.json，社交链接写在这里
 ├── app/
 │   ├── layout.tsx          # 根布局（导航栏、背景、主题、网速计都挂在这里）
 │   ├── page.tsx            # 首页（Bento Grid）
 │   ├── not-found.tsx       # 404 页，构建时导出成 out/404.html 由 Pages 兜底
-│   └── {about,articles,photos,projects,friends,music}/page.tsx
+│   ├── globals.css / markdown.css  # 主题变量与文章排版
+│   ├── {about,articles,photos,projects,friends,music}/page.tsx
+│   └── articles/[slug]/page.tsx  # 每篇文章一页，generateStaticParams 在构建期铺好
 ├── components/
 │   ├── AnimatedEntry.tsx   # 交错入场动画容器
-│   ├── ArticleCard.tsx     # 文章卡
+│   ├── ArticleReader.tsx   # 文章阅读层：勾选框、字号、同步开关
 │   ├── DataMeter.tsx       # 传输量计（右下角）
 │   ├── GlassCard.tsx       # 毛玻璃卡片（3D 倾斜 + 聚光灯）
+│   ├── Home.tsx            # 首页 Bento 仪表盘（客户端部分，数据由 server 组件传入）
 │   ├── MusicPlayer.tsx     # 音乐播放器
 │   ├── Navbar.tsx          # 顶部导航 + 主题切换 + 移动端菜单
 │   ├── PhotoCarousel.tsx   # 首页照片轮播
@@ -62,8 +66,9 @@ src/
 │   └── ThemeProvider.tsx   # 明暗主题
 ├── content/                # ← 全站内容，改这里；用 npm run studio 或 /admin 编辑
 │   ├── profile.json        # 昵称、简介、头像
-│   ├── articles.json       # 文章
-│   ├── projects.json       # 项目
+│   ├── notes/*.md          # 文章正文：frontmatter + markdown，构建期渲染成 /articles/<文件名>/
+│   ├── projects.json       # 只是覆盖表：进度、状态、想改的显示名
+│   ├── github-repos.json   # 构建期抓下来的公开仓库清单，提交进仓库当断网兜底
 │   ├── photos.json         # 照片
 │   ├── friends.json        # 友链
 │   └── music.json          # 音乐
@@ -73,11 +78,16 @@ src/
 │   ├── useSpotlight.ts     # 聚光灯效果
 │   └── useTiltEffect.ts    # 3D 倾斜效果
 ├── lib/
-│   └── constants.ts        # 读取 content/*.json，字段写错时构建期报错
+│   ├── constants.ts        # 读 music/photos/friends 三份 JSON，类型不符构建期报错
+│   ├── notes.ts            # 构建期渲染 notes/*.md：目录、阅读时长、勾选框的内容哈希
+│   ├── projects.ts         # GitHub 清单与 projects.json 覆盖表合并，status 写错构建期报错
+│   └── sync.ts             # 打卡状态跨设备同步：私有 gist + 只存 localStorage 的 token
 └── types/
     └── index.ts            # 类型定义 + 允许的枚举值
 
 tools/
+├── fetch-repos.mjs         # 构建第一步：抓公开仓库清单 → src/content/github-repos.json
+├── notes-meta.mjs          # 读 notes/*.md 的元数据，给快照和本地发布台用
 ├── publish-content.mjs     # 构建后把 content/*.json 快照到 out/content/，供 /admin 同源读取
 └── studio/                 # npm run studio 的本地发布台（不进构建产物）
     ├── server.mjs          # 读写 content/*.json、压图、commit + push

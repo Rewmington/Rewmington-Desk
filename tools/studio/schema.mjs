@@ -1,6 +1,7 @@
-// 本地发布台（tools/studio/server.mjs）和线上后台（worker/index.js）共用这一份定义。
-// 两边都必须校验：线上 Worker 放过的坏数据会让 Actions 构建失败，
-// 而构建失败 = 站点悄悄停在旧版本，比报错更难查。
+// 本地发布台（tools/studio/server.mjs）的字段定义与校验。
+// 线上后台 public/admin/index.html 里另存着一份同形的字段清单，加字段时两处都要改。
+// 为什么这一层必须自己挡：/admin 只生成待粘贴的文本、不落盘，拦不住坏数据；
+// 而坏数据一旦写进 src/content，构建失败 = 站点悄悄停在旧版本，比报错更难查。
 
 export const SCHEMA = {
   projects: {

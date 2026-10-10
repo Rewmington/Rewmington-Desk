@@ -40,16 +40,20 @@ English | [简体中文](./README.md)
 
 ```
 src/
+├── siteConfig.ts           # Site-level config: name/bio come from profile.json, social links are hardcoded here
 ├── app/
 │   ├── layout.tsx          # Root layout (navbar, background, theme, transfer meter)
 │   ├── page.tsx            # Homepage (Bento Grid)
 │   ├── not-found.tsx       # 404 page, exported as out/404.html for Pages to fall back on
-│   └── {about,articles,photos,projects,friends,music}/page.tsx
+│   ├── globals.css / markdown.css  # Theme variables and article typography
+│   ├── {about,articles,photos,projects,friends,music}/page.tsx
+│   └── articles/[slug]/page.tsx  # One prerendered page per article
 ├── components/
 │   ├── AnimatedEntry.tsx   # Staggered entry animation container
-│   ├── ArticleCard.tsx     # Article card
+│   ├── ArticleReader.tsx   # Article reader: checkboxes, font size, sync toggle
 │   ├── DataMeter.tsx       # Transfer meter (bottom-right)
 │   ├── GlassCard.tsx       # Glassmorphism card (3D tilt + spotlight)
+│   ├── Home.tsx            # Homepage Bento dashboard (client half; data comes from a server component)
 │   ├── MusicPlayer.tsx     # Music player
 │   ├── Navbar.tsx          # Top nav, theme toggle, mobile menu
 │   ├── PhotoCarousel.tsx   # Homepage photo carousel
@@ -62,8 +66,9 @@ src/
 │   └── ThemeProvider.tsx   # Light/dark theme
 ├── content/                # ← All site content lives here; edit via `npm run studio` or /admin
 │   ├── profile.json        # Name, bio, avatar
-│   ├── articles.json       # Articles
-│   ├── projects.json       # Projects
+│   ├── notes/*.md          # Article bodies: frontmatter + markdown, rendered at build time into /articles/<file>/
+│   ├── projects.json       # Just an override table: progress, status, display name
+│   ├── github-repos.json   # Public repo list fetched at build time; committed as the offline fallback
 │   ├── photos.json         # Photos
 │   ├── friends.json        # Friends / blogroll
 │   └── music.json          # Music tracks
@@ -73,11 +78,16 @@ src/
 │   ├── useSpotlight.ts     # Spotlight effect
 │   └── useTiltEffect.ts    # 3D tilt effect
 ├── lib/
-│   └── constants.ts        # Loads content/*.json, fails the build on bad fields
+│   ├── constants.ts        # Loads the music/photos/friends JSON; type mismatches fail the build
+│   ├── notes.ts            # Renders notes/*.md at build time: TOC, reading time, content hashes for checkboxes
+│   ├── projects.ts         # Merges the GitHub list with the projects.json override table; a bad status fails the build
+│   └── sync.ts             # Cross-device checkbox sync: private gist + a token kept only in localStorage
 └── types/
     └── index.ts            # Type definitions + allowed enum values
 
 tools/
+├── fetch-repos.mjs         # first build step: fetch public repos → src/content/github-repos.json
+├── notes-meta.mjs          # Reads notes/*.md metadata for the snapshot and the local desk
 ├── publish-content.mjs     # after build, snapshot content/*.json into out/content/ for /admin
 └── studio/                 # local publishing desk behind `npm run studio` (not in the build output)
     ├── server.mjs          # reads/writes content/*.json, compresses images, commits + pushes
