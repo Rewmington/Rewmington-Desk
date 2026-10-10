@@ -115,6 +115,44 @@ Tomcat 线程  →  你的业务线程池  →  数据库连接池  →  下游 
 
 结论一句：**把业务线程池从 8 调到 800，吞吐不会涨 100 倍，只会把压力原封不动推到数据库连接池和第三方 API 的限流上。** 所以"我为什么这么设"要连着上下游一起答——这也正好是你路线里并发那格的过关标准。
 
+### 四个默认线程池对照表（全部是你这台机器上的实测）
+
+你一行代码没写，进程里其实已经有四个线程池在跑了。这张表的价值是：**它们四个的故障模式完全不同，出事时长得不一样。**
+
+| 谁在用 | 入口 / Bean 名 | 默认核心数 | 队列 | 默认上限 | 其它关键默认值 | 出处 |
+|---|---|---|---|---|---|---|
+| **① HTTP 请求** | Tomcat NioEndpoint（线程名 `http-nio-8080-exec-N`） | `server.tomcat.threads.min-spare` = **10** | **没有业务队列**，靠 OS 的 backlog | `server.tomcat.threads.max` = **200** | `maxConnections` = **8192**、`acceptCount` = **100** | 你本地 `spring-boot-autoconfigure-3.5.0.jar` 的配置元数据 + Tomcat 官方 config/http.html |
+| **② `@Async`** | `applicationTaskExecutor`（`ThreadPoolTaskExecutor`） | `core-size` = **8** | `LinkedBlockingQueue`，`queue-capacity` = **Integer.MAX_VALUE（无界）** | `max-size` = **Integer.MAX_VALUE** | `keep-alive`=60s、`allow-core-thread-timeout`=**true**、线程名前缀 `task-`、`mode`=auto | `TaskExecutionProperties.Pool` 源码（`coreSize=8`、`maxSize`/`queueCapacity` 都是 `Integer.MAX_VALUE`） |
+| **③ `@Scheduled`** | `taskScheduler`（`ThreadPoolTaskScheduler`） | `spring.task.scheduling.pool.size` = **1** | `DelayedWorkQueue`（**无界**，按到期时间排序，所以"排队"排的是时间而不是人） | **固定大小，永远不会扩** | 线程名前缀 `scheduling-`、`await-termination` = false | `TaskSchedulingProperties.Pool` 源码（`private int size = 1;`） |
+| **④ `parallelStream()` / 不带 executor 的 `CompletableFuture.*Async`** | `ForkJoinPool.commonPool()` | **CPU 核数 − 1** | 每个 worker 一个双端队列（work-stealing） | 不可通过 API 设，只能上系统属性 `java.util.concurrent.ForkJoinPool.common.parallelism` | 你机器实测：`availableProcessors=24` → `commonPool.getParallelism()=23`，`poolSize=0`（线程按需创建），那个系统属性 = `null`（没设过） | 你机器上直接跑出来的（下面给你命令） |
+
+四条要分开讲的坑：
+
+- **② 是最反直觉的一个。** 你以为加了 `@Async` 就"并发跑"，其实默认只有 **8 个线程**真的在跑，其余任务在无界队列里等 —— 表现是"我明明并行了，为什么没变快"。而它同时又是**第五节里那两个坑的合体**（队列无界 + max 无限），任务堆积时你看到的是内存涨而不是拒绝。**并且 `allow-core-thread-timeout` 默认是 true**，这跟裸 `ThreadPoolExecutor` 相反（我实测：新建的 `ThreadPoolExecutor` 默认 `allowsCoreThreadTimeOut()=false`），意思是闲够 60 秒后连"核心"线程都会被收掉 —— 你的定时批处理跑完一小时后再触发，等于冷启动。
+- **③ 只有一个线程。** 这是最容易出事的一条：两个 cron 撞到同一分钟，或者一个 `@Scheduled` 方法里调了个 30 秒的外部接口，**其它所有定时任务全部延后**，而且不报错。解法两条：`spring.task.scheduling.pool.size` 调大；或者让定时方法**只负责提交任务**给别的池（注意别提交到 ②，否则绕回同一个无界队列）。
+- **④ 最隐蔽，因为你可能压根不知道自己用了它。** `list.parallelStream()`、`CompletableFuture.supplyAsync(supplier)`（**不传 executor 的那个重载**）都落在 commonPool 上。而 commonPool 是**整个 JVM 共享一份**的：你在里面做阻塞 IO（调 embedding 接口），就会把这 23 个槽占住，**别人（以及你自己别处的并行流）一起排队**。它的定位是给 CPU 密集 + work-stealing 用的，任务一阻塞就退化。所以规矩很简单：**做 IO 永远显式传自己的 executor。**
+- **① 和 ②④ 的故障表现不同，值得对比着讲。** HTTP 这一层"排队"发生在 **OS 的连接 backlog**（`acceptCount=100`）上，超了新连接握手后被晾着或拒掉，客户看到的是**连不上/超时**；而 ② 的"排队"是**堆在 JVM 内存里**，客户看得到响应、你却慢慢吃掉堆。前者炸连接数，后者炸 heap —— 同一个"线程池打满"，两幅完全不同的现场。
+
+自己复现一遍（比读表有用），在你项目的测试里丢一个类跑掉：
+
+```java
+public class Pools {
+  public static void main(String[] a) {
+    System.out.println("CPU = " + Runtime.getRuntime().availableProcessors());
+    ForkJoinPool cp = ForkJoinPool.commonPool();
+    System.out.println("commonPool.parallelism = " + cp.getParallelism());
+    ThreadPoolExecutor t = new ThreadPoolExecutor(1, 2, 60, java.util.concurrent.TimeUnit.SECONDS,
+            new java.util.concurrent.ArrayBlockingQueue<>(2));
+    System.out.println("默认拒绝策略 = " + t.getRejectedExecutionHandler().getClass().getSimpleName());
+    System.out.println("默认允许核心线程超时 = " + t.allowsCoreThreadTimeOut());
+  }
+}
+```
+
+运行（JDK 17 支持单文件直接跑，不用先 javac）：`java Pools.java`。我在这台机器上跑出来的结果是 `24 / 23 / AbortPolicy / false`。
+
+线上怎么**看**到底有几个池：`jstack <pid>`、或者引了 actuator 就打 `/actuator/threaddump`，按线程名前缀数一遍 —— `http-nio-`、`task-`、`scheduling-`、`ForkJoinPool.commonPool-worker-`，你能一眼看出自己踩了哪一个。
+
 ## 七、并发最小模型：可见性和原子性是两件事
 
 这三个只需要能各讲一句，不需要展开：
@@ -170,12 +208,27 @@ Tomcat 线程  →  你的业务线程池  →  数据库连接池  →  下游 
 
 ## 十二、核对清单
 
-去官方文档或自己机器上确认，别信我：
+**✅ 已核 —— 三个来源：你本地的 jar 与源码、Tomcat 官方文档、你这台机器实测**
 
-- [ ] `ThreadPoolExecutor` javadoc 里七个参数的**顺序和准确含义**，以及四个拒绝策略的类名
+出处：`~/.m2/.../spring-boot-autoconfigure-3.5.0.jar` 里的 `META-INF/spring-configuration-metadata.json`；同一 artifact 的 sources jar 里 `TaskExecutionProperties.Pool`、`TaskSchedulingProperties.Pool`；Tomcat 10.1 官方 `config/http.html`；`java Pools.java` 在你机器上的输出。
+
+- [ ] 你项目是 **Boot 3.5.0 + Java 17（Temurin 17.0.20.1）**，`spring-boot-starter-web` → 内嵌 Tomcat（直接读你的 `pom.xml`）
+- [ ] Tomcat：`threads.max=200`、`threads.min-spare=10`、`accept-count=100`、`max-connections=8192`；官方 config/http.html 对 `maxThreads` 的默认值原话是 "If not specified, this attribute is set to 200"
+- [ ] `applicationTaskExecutor`（`@Async`）：core **8**、max **Integer.MAX_VALUE**、queue-capacity **Integer.MAX_VALUE**、keep-alive **60s**、`allow-core-thread-timeout` **true**、线程名前缀 `task-`
+- [ ] `taskScheduler`（`@Scheduled`）：pool.size = **1**
+- [ ] 裸 `ThreadPoolExecutor` 的默认：拒绝策略 **AbortPolicy**、`allowsCoreThreadTimeOut()` = **false**、keepAlive **60 秒**（我构造一个实例打印出来的，与 Boot 那套的 true 形成对比）
+- [ ] 你这台机器：`availableProcessors = 24`，`ForkJoinPool.commonPool().getParallelism() = 23`（即"核数 − 1"），`poolSize = 0`（线程按需创建），系统属性 `java.util.concurrent.ForkJoinPool.common.parallelism` 未设
+- [ ] 虚拟线程要 Java 21+，你在 17 上**用不了**；`spring.threads.virtual.enabled` 默认 false
+
+**⚠️ 留空 —— 我没核实，别背**
+
+- [ ] `ThreadPoolExecutor` javadoc 里七个参数的**顺序和准确含义**、四个拒绝策略的类名（javadoc 我这次没打开，只实测了默认策略那一项）
 - [ ] `LinkedBlockingQueue` 无界时的确切容量值、`SynchronousQueue` 的交接语义
-- [ ] Tomcat `maxThreads=200` / `minSpareThreads=10` / `acceptCount=100` —— 按**你项目实际用的 Tomcat 版本**重查（Tomcat 官方 config/http.html）
-- [ ] 你项目里 `@Async` 默认落到哪个 executor、`spring.task.execution.mode=auto` 的确切触发条件（这条我只到配置元数据一级，没读到源码，**你自己确认**）
-- [ ] 你用的 DeepSeek / 智谱 控制台上的**并发数或 RPM/TPM 限额**到底是多少 —— 这个数字决定第十节③的线程数，而且必须现查，API 一改你的答案就错了
-- [ ] Goetz 那本书里线程数公式的原始写法
-- [ ] **偏向锁在哪个 JDK 版本被废弃/默认关闭、对应 JEP 编号 —— 这一条我当场没能验证，所以故意留给你查。查到之前别写进简历。**
+- [ ] `spring.task.execution.mode=auto` 的**确切触发条件**（我只到配置元数据一级）
+- [ ] **`@Async` 在没有 `applicationTaskExecutor` 时的退化行为**：Spring 会退回 `SimpleAsyncTaskExecutor`（每次新建线程、不复用），**这条我只记得大致结论，没读到源码，别当定论讲**
+- [ ] Tomcat 的 `threadNamePrefix`（那是 `<Executor>` 共享线程池上的属性，Connector 上没有；所以我说的 `http-nio-8080-exec-N` 是 NioEndpoint 的默认命名，**没有逐字核**）
+- [ ] `spring.mvc.async.request-timeout` 未设时 Servlet 容器（Tomcat）的异步超时默认值 —— 你做 SSE 那周会用到，`SHOW` 不出来，得读 Tomcat 文档或实测
+- [ ] 你用的 DeepSeek / 智谱 控制台上的**并发数或 RPM/TPM 限额** —— 这个数字决定第十节③的线程数，只能你自己去控制台查，而且会变
+- [ ] Goetz《Java 并发编程实战》里线程数公式的原始写法与出处章节
+- [ ] **偏向锁在哪个 JDK 版本被废弃/默认关闭、对应 JEP 编号 —— 故意留给你查。查到之前别写进简历。**
+- [ ] `commonPool` 被阻塞任务占满时 ForkJoinPool 的 compensation thread 行为（`ForkJoinPool` 的并行度补偿机制我没读源码，别照我这段展开讲）

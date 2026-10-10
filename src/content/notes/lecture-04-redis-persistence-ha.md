@@ -208,6 +208,8 @@ sentinel parallel-syncs mymaster 1                # 一次让几个副本同时�
 - [ ] Cluster 用 hash slot 而非一致性哈希：**16384 槽、CRC16 % 16384**；最小 **3 主**，推荐 **3 主 3 从**；hash tag `{}` 的语义
 - [ ] 7.0 起 multi-part AOF（base + incr + manifest）；备份 AOF 时要先停 rewrite
 - [ ] RDB 靠 fork + 写时复制；数据集很大时 fork 可能让 Redis 停服务几毫秒到一秒
+- [ ] **版本线证据（2026-10-10 新查到）**：官方 SET 命令页标注选项组的 since —— NX/XX 与 EX/PX = **2.6.12**、KEEPTTL = **6.0.0**、GET/EXAT/PXAT = **6.2.0**、**IFEQ/IFNE/IFDEQ/IFDNE = 8.4.0**；官方分布式锁页还写明 **`DELEX` 由 Redis 8.4 引入**。所以"当前版本至少到 8.4"是**有官方出处的**；至于更高的 8.6 / 8.8，仍是第三方报道，我没在 redis.io 核到
+- [ ] 布隆过滤器（含公式与 `BF.*` 命令）已经在 **Redis 开源版**里提供，不再是 RedisBloom 模块独有 —— 讲义 05 引的具体数字也一并核过了
 
 **⚠️ 留空 —— 我没核实，别背我这里的数，自己去 `CONFIG GET` 或文档查**
 

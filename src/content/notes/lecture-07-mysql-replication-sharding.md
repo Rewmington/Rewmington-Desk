@@ -53,7 +53,18 @@ rpl_semi_sync_replica_enabled    # 副本开关
 rpl_semi_sync_source_timeout     # 等不到确认就退回异步
 ```
 
-**坑点（这是这段的加分句）**：半同步保证的是"不丢"，代价是**每次提交都要等一次网络往返**，写延迟上升；而且**"收到"不等于"重放"**，所以从副本上读到的数据仍然可能是旧的；一旦超时它会**自动降级成异步**，此时"不丢"这个承诺当场失效。默认值和它在 8.0 各版本里的命名（老版是 master/slave）我留到清单里让你查。
+**默认值（✅ 已从官方 `replication-semisync-interface.html` 核对）**：
+
+| 变量（8.0 新名 / 老名） | 默认值（官方） |
+|---|---|
+| `rpl_semi_sync_source_enabled` / `..._master_enabled` | **0（关）** —— 半同步默认不开，必须装插件并显式打开 |
+| `rpl_semi_sync_source_timeout` / `..._master_timeout` | **10000 毫秒（10 秒）** |
+| `rpl_semi_sync_source_wait_for_replica_count` | **1**（每个事务等 1 个副本确认） |
+| `rpl_semi_sync_source_wait_point` | **`AFTER_SYNC`**（另一个可选值是 `AFTER_COMMIT`） |
+
+关于超时，官方的原话是它在"等不到副本确认时会 **timing out and reverting to asynchronous replication**"。
+
+**坑点（这是这段的加分句）**：半同步保证的是"不丢"，代价是**每次提交都要等一次网络往返**，写延迟上升；而且**"收到"不等于"重放"**，所以从副本上读到的数据仍然可能是旧的；一旦超过那 10 秒，它会**自动退回异步**，此时"不丢"这个承诺当场失效 —— 而且这个退回是**静默**的，没人告诉你。`wait_point` 那个 `AFTER_SYNC` / `AFTER_COMMIT` 的差别也值得记：**AFTER_SYNC 是"写到 relay log、等确认，但还没在源端提交前"就等**，所以副本崩溃回滚时不会出现"源端提交了但副本不知道"的幽灵更新；AFTER_COMMIT 则是提交后才等，存在那个窗口。**两者的确切官方定义你点开 Configuring Semisynchronous Replication 那一节再确认一次**，我这里给的是它的名字和默认值。
 
 至于"全同步"：MySQL 官方没有提供多副本强同步（组复制 Group Replication / `ndb` 是另外的东西，本讲义不展开，**我也不会在这里给你它的结论**）。
 
@@ -66,7 +77,13 @@ gtid_mode                  = ON     # 开这个功能
 enforce_gtid_consistency   = ON     # 只允许能安全记成 GTID 的语句
 ```
 
-官方列的用处：自动定位（auto-position）、多源复制、故障切换/扩容更好做。**GTID 的格式（`server_uuid:事务序号`）、以及开启它的在线步骤（`OFF → OFF_PERMISSIVE → ON_PERMISSIVE → ON`）我没核实，进清单**。
+**默认值与开启方式（✅ 已从官方 `replication-options-gtids.html` 核对）**：`gtid_mode` 默认 **OFF**，`enforce_gtid_consistency` 默认 **OFF**。切换是**在线的、但一次只能跨一步**，官方原话：
+
+> "Changes from one value to another can only be one step at a time. For example, if `gtid_mode` is currently set to `OFF_PERMISSIVE`, it is possible to change to `OFF` or `ON_PERMISSIVE` but not to `ON`."
+
+所以正向路径是 `OFF → OFF_PERMISSIVE → ON_PERMISSIVE → ON`，反向对称。两个中间值的含义是"允许新事务不带 GTID / 允许复制别人的匿名事务"这类过渡语义，**具体定义我没逐字核**，你在 `replication-mode-change-online-concepts.html` 那一页读一遍（这一页我这次没能打开）。
+
+官方列的用处：自动定位（auto-position）、多源复制、故障切换/扩容更好做。**GTID 的格式（`server_uuid:事务序号`）我没核实，进清单。**
 
 一句话价值：**GTID 把"复制的进度"变成一个可枚举的集合，而不是一条位置指针** —— 这跟讲义 04 里 replication ID + offset 是同一个思路，只是表达方式不同。
 
@@ -119,6 +136,33 @@ enforce_gtid_consistency   = ON     # 只允许能安全记成 GTID 的语句
 
 **全局 ID**：各表自增一定撞。常见做法是**号段模式**（从 DB 批量领一段号）和**雪花算法**（时间戳 + 机器位 + 序列位）。雪花的经典问题是**时钟回拨**（机器时间倒退会生成重复 ID），工程上要等待/报错/用备用位 —— **具体位分配和业界实现细节我没核实，进清单。**
 
+**扩容怎么迁（这条是"知道代价"的重点，不是背工具名）**：
+
+```
+1. 新老两套同时写（双写）—— 老库仍然是真相源
+2. 全量把历史数据搬到新分片
+3. 增量追平（靠 binlog 订阅或时间戳水位）
+4. 校验：条数 + 抽样字段比对，不一致就报警并重新搬
+5. 灰度切读：先切 1% 流量到新体系，观察
+6. 停老写，只保留回退窗口
+```
+
+每一步都必须能回退 —— **这和讲义 04 里 schema 的 expand-and-contract 是同一个思想**。真正的难点在 3 和 4：老库还在被写，你的增量水位一旦落后，校验就会一直对不上。
+
+**什么时候该分（三条硬信号，别看"500 万行"那种经验数）**：① 单表 DDL / 备份 / 恢复的时间已经超出业务能忍的窗口；② Buffer Pool 装不下热点页、走索引的查询延迟开始不稳（接讲义 01）；③ **写**已经打满一台机器（注意：只有前两条通常是"分区或加索引"能解决的，第三条才是分库的真正理由）。
+
+### 别把 MySQL 自带 partition 当成"分库分表"
+
+这三句话是官方的，能一次讲清边界（✅ `partitioning-limitations.html` 与 `partitioning-limitations-storage-engines.html`）：
+
+1. **上限**："The maximum possible number of partitions for a given table not using the NDB storage engine is **8192**. This number **includes subpartitions**." —— 也就是说它天生就不是给"无限扩容"用的。
+2. **它不解决写和容量**：分区还是**同一张表、同一个实例、同一个 InnoDB**，只是把一张表的数据按分区键切成多个片段。所有写仍然走一个实例 —— 这正是它和水平拆分的根本区别。它能帮你的是**分区裁剪**（查 3 月的数据只碰 3 月那个分区）和**按分区做维护**（DROP PARTITION 秒删旧数据，比 DELETE 快几个量级）。
+3. **它会拿走你的外键**："Partitioned tables using the InnoDB storage engine **do not support foreign keys**"，而且官方还说明 **8.0 里只有 InnoDB 和 NDB 提供原生分区 handler**，别的引擎建不了分区表。你项目里那种"文档-分块-向量"的父子表关系，一旦给父表分区，外键就没了。
+
+再加两条你在选型时要自己确认的限制（**这两条我只是在阿里云 RDS 的镜像文档里看到，官方原文我没逐条核对，进清单**）：分区列必须包含在主键/每个唯一索引里；分区表达式对列类型有要求。**"分区列必须进主键"这条尤其致命**——它意味着你几乎不可能既按时间分区、又保留"业务 id 全局唯一"这个约束。
+
+一句话记法：**分区 = 一台机器上把一张表切小；分库分表 = 多台机器把数据切散。** 面试说混了会被追。
+
 ## 七、什么情况下会坏
 
 1. **副本挂了没人知道，读流量全压回主库** → 主库被自己原本分担给从库的读打死。要有摘除与告警。
@@ -154,23 +198,31 @@ enforce_gtid_consistency   = ON     # 只允许能安全记成 GTID 的语句
 2. 主从延迟为什么会发生、`Seconds_Behind_Master` 有什么坑、你的项目里哪个具体场景会因此变成 bug？给出四种对策并说代价。
 3. 分片键选择的三个判据是什么？为什么用固定槽而不是对节点数取模（拿 Redis Cluster 的 16384 对比讲）？你的项目为什么"暂时不该分库分表"？
 
-## 十、核对清单
+## 十、核对清单（2026-10-10 已用一手来源补全）
 
-**✅ 已核（MySQL 8.0 官方 Reference Manual）**
+**✅ 已核 —— MySQL 8.0 Reference Manual，我把页名给你，正文可以照着讲但仍要点开自己读**
+
+来源：`replication-implementation.html`、`replication-semisync-interface.html`、`replication-options-gtids.html`、`partitioning-limitations.html`、`partitioning-limitations-storage-engines.html`、`replication-options-binary-log.html`。
 
 - [ ] 复制是 **pull 模型**；三个线程：源端 **binlog dump**、副本 **I/O 线程 → relay log**、副本 **SQL 线程重放**
-- [ ] 半同步是**插件**，变量名 `rpl_semi_sync_source_enabled` / `rpl_semi_sync_replica_enabled` / `rpl_semi_sync_source_timeout`
-- [ ] GTID 的两个关键变量：`gtid_mode`、`enforce_gtid_consistency`
-- [ ] `Seconds_Behind_Master` 是估算值；多线程复制下不反映最慢 worker；时钟变化不可靠；多源可能为 `NULL`
-- [ ] 8.0 里 `binlog_format` 默认 **ROW**（讲义 04/03 都引用过这条）
+- [ ] 半同步是**插件**；默认值：`rpl_semi_sync_source_enabled = 0`、`rpl_semi_sync_source_timeout = 10000`（10 秒）、`rpl_semi_sync_source_wait_for_replica_count = 1`、`rpl_semi_sync_source_wait_point = AFTER_SYNC`（可选 `AFTER_COMMIT`）
+- [ ] 超时的官方措辞：**"timing out and reverting to asynchronous replication"**（会静默退回异步）
+- [ ] 老变量名 `..._master_*` / `..._slave_*` 与新名 `..._source_*` / `..._replica_*` **是同一组变量的两个名字**（官方在同一个条目里并列给出）
+- [ ] `gtid_mode` 默认 **OFF**、`enforce_gtid_consistency` 默认 **OFF**；切换**一次只能跨一步**（官方原话：`OFF_PERMISSIVE` 时只能回 `OFF` 或去 `ON_PERMISSIVE`，不能直接 `ON`），正解路径 `OFF → OFF_PERMISSIVE → ON_PERMISSIVE → ON`
+- [ ] `Seconds_Behind_Master` 是**估算值**；多线程复制下不反映最慢 worker；NTP 调时会失真；多源复制可能为 `NULL`；`0` 不等于实时
+- [ ] 8.0 里 `binlog_format` 默认 **ROW**；`binlog_row_image` 默认 **full**；`binlog_cache_size` 默认 **32768**；`binlog_group_commit_sync_delay` 默认 **0**；`relay_log_purge` 默认 **ON**
+- [ ] RC 隔离级别下 **"Only row-based binary logging is supported"**（讲义 03 引的同一条）；RC 下**不加间隙锁**、RR 用 **gap / next-key lock** 挡插入
+- [ ] **分区上限 8192（含子分区，非 NDB 引擎）**；**InnoDB 分区表不支持外键**；8.0 里**只有 InnoDB 与 NDB 提供原生分区 handler**
 
-**⚠️ 留空 —— 我没能核实，别背**
+**⚠️ 仍然留空 —— 我这次也没能核实，别背**
 
-- [ ] `replica_parallel_workers` / `replica_parallel_type` / `replica_parallel_strategy` / `replica_preserve_commit_order` 的**默认值**，以及 8.0 各小版本命名差异（`slave_*` → `replica_*` 是哪版改的）
-- [ ] `rpl_semi_sync_source_timeout` 的默认值，以及"半同步等待的是 ACK 还是 flush"的确切边界
-- [ ] GTID 开启的在线切换步骤与格式细节
-- [ ] **MySQL 单表分区上限**（我印象里是 8192，**没核实**，别写进简历）以及"分区 ≠ 分库分表"的准确表述
-- [ ] 雪花算法的位分配、时钟回拨的标准处理；号段模式的实现要点
-- [ ] `gh-ost` / `pt-online-schema-change` 的机制与限制
-- [ ] pgvector 分片对 HNSW 召回率与建索引时间的实际影响（**这条只能你自己压测**）
+- [ ] `replica_parallel_workers` / `replica_parallel_type` / `replica_parallel_strategy` / `replica_preserve_commit_order` 的**默认值**：官方 `replication-options-replica.html` 那页我这次取到的内容在 `relay_log_info_repository` 处就截断了，**没覆盖到这几个参数**。最短路径是在你自己的 8.0.46 上实测：`SHOW VARIABLES LIKE 'replica_par%';`
+- [ ] `sync_binlog` 与 `innodb_lock_wait_timeout` 的默认值（同理，取到的页面对它们只做了引用、没给 Default Value 行；`SHOW VARIABLES LIKE 'sync_binlog'; SHOW VARIABLES LIKE 'innodb_lock_wait_timeout';` 直接看你机器的）
+- [ ] `AFTER_SYNC` 与 `AFTER_COMMIT` 的**准确语义差别**（我只核到了默认是 AFTER_SYNC，正文里那段"幽灵更新"的解释是我的推断，别当结论讲）
+- [ ] GTID 的格式（`server_uuid:序号`）与 `gtid_executed` / `gtid_purged` / `RESET MASTER` 的行为细节（生命周期那一节我取到的是流程描述，没做逐条核对）
+- [ ] 分区列必须包含在主键/唯一索引内、以及分区表达式对列类型的要求 —— **我是在云厂商镜像文档里看到的，官方原文没逐条核**
+- [ ] 雪花算法的位分配、时钟回拨的标准处理；号段模式的实现要点（**这些没有任何"官方"可言，只能读实现源码**）
+- [ ] `gh-ost` / `pt-online-schema-change` 的机制与限制（工具文档，我这次没读）
+- [ ] pgvector 分片对 HNSW 召回率与建索引时间的实际影响 —— **只能你自己压测**，我给不了数
+- [ ] 组复制（Group Replication）与 `NDB` 的定位（本讲义只在第九节点到名字，没有讲机制，**别在面试里说我懂**）
 - [ ] `binlog_transaction_compression` 等 8.0 新优化项（我只提了名字）

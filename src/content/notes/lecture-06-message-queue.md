@@ -47,7 +47,8 @@ order: 10
 **broker 自身**
 
 - RabbitMQ：消息要标记持久化、**队列也要是 durable**，两者都要满足才会落盘（只设一个等于没设，这条是经典考点）。
-- Kafka：靠**副本**。`min.insync.replicas` + `acks=all` 组合才谈得上"不丢"（默认值是留空项，见清单）。
+- **RabbitMQ 4.x 的默认队列类型是 quorum queues**，而 **classic mirrored queues（镜像队列）已经在 4.0 移除**（✅ 官方 `docs/quorum-queues`）。三个要点：quorum 队列基于 Raft 做副本；**重试上限用 `x-delivery-limit`，默认 20 次**（超过就按你的失败处理策略走，比如进死信）；官方明确 **quorum 队列不支持全局 QoS prefetch**（`global` prefetch 只有 classic 队列有）。**`x-single-active-consumer` 的默认值我这次没核到，见清单。**
+- Kafka：靠**副本**。`min.insync.replicas` + `acks=all` 组合才谈得上"不丢"（**默认值我没能核实**，官方文档那页太长没取到，见清单）。
 - 还要问一句：**broker 落盘之后，备份谁做？** 这跟讲义 04 第十节"副本不是备份"是同一件事。
 
 **broker → 消费者**
@@ -131,19 +132,24 @@ order: 10
 
 ## 十、核对清单
 
-**✅ 已核（RabbitMQ 官方 `docs/confirms`）**
+**✅ 已核（RabbitMQ 官方文档）**
+
+来源：`rabbitmq.com/docs/confirms`、`rabbitmq.com/docs/quorum-queues`。
 
 - [ ] publisher confirms 覆盖生产端到 broker，**不覆盖消费者处理**
 - [ ] 自动 ack 模式被官方称为 fire-and-forget、"should be considered unsafe"
 - [ ] 全部消费者因暂时性问题 requeue 会造成 requeue/redelivery loop（官方原话）
 - [ ] prefetch 设 0 = no limit，有内存增长风险
 - [ ] 官方要求消费者按 at-least-once 实现、**必须具备幂等性**
+- [ ] **quorum queues 是当前的默认选择；classic mirrored queues 已在 RabbitMQ 4.0 移除**
+- [ ] **`x-delivery-limit` 默认 20**；**quorum 队列不支持全局 QoS prefetch**
 
 **⚠️ 留空 —— 我没能核实，自己去查**
 
-- [ ] Kafka：`acks` 默认值、`min.insync.replicas` 默认值、`enable.auto.commit` 默认值、幂等生产者从哪个版本默认开、`max.poll.interval.ms` 默认值
-- [ ] Kafka：`delivery.timeout.ms` 与 `retries` 的关系；事务消息（exactly-once sink）的适用边界
-- [ ] RabbitMQ：`x-single-active-consumer`、quorum queues 与 classic mirrored queues 的取舍与现版本推荐（mirrored 的废弃状态要去核）
-- [ ] RabbitMQ 延迟消息是靠插件还是原生能力、**TTL 到期消息的队头阻塞问题**（这个坑很经典，务必自己查一遍）
-- [ ] `SKIP LOCKED` 在你用的 MySQL 8.0.46 上的确切语义与限制（官方 `SELECT ... FOR UPDATE` 那节有，我没有当场核对）
+- [ ] Kafka：`acks` 默认值、`min.insync.replicas` 默认值、`enable.auto.commit` 默认值、幂等生产者从哪个版本默认开、`max.poll.interval.ms` 默认值 —— 官方文档页太长我这次没取到内容，**别背网上流传的数字**；最稳的查法是 `bin/kafka-configs.sh --bootstrap-server ... --entity-type brokers --describe --all` 或读文档对应锚点
+- [ ] Kafka：`delivery.timeout.ms` 与 `retries`/`linger.ms` 的关系；事务（exactly-once sink）的适用边界
+- [ ] RabbitMQ：`x-single-active-consumer` 的默认值与语义；quorum 队列的 `wait_on_actions_to_lose_quorum`、`x-initial-cluster-size` 这类参数
+- [ ] RabbitMQ 延迟消息：官方文档里确实有 **Delayed Message Delivery** 一节（4.0 之后不必再装插件的说法我**没有核实**）；以及"队列头部 TTL 消息造成队头阻塞"这个经典坑的现状
+- [ ] 全局顺序 vs 分区/队列级有序在 Kafka 侧的确切保证边界（**加分项：你要能解释为什么"消费端多线程会破坏顺序"以及怎么按 key 分派到固定线程**）—— 我给的是通用做法，逐字结论请读 Kafka 官方 documentation 的 consumer 一节
+- [ ] `SKIP LOCKED` 在你用的 MySQL 8.0.46 上的确切语义与限制（官方 `SELECT ... FOR UPDATE` 那一节有，我没有当场核对；实测最直接：两个会话同时 `SELECT ... FOR UPDATE SKIP LOCKED` 看会不会拿到同一行）
 - [ ] outbox / 事务消息（RocketMQ 半消息）两种方案的完整流程 —— 我只给了名字，**细节别照我说的讲**

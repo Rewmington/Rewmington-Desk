@@ -160,6 +160,21 @@ redo 是 InnoDB 引擎内部的物理日志（内容固定、循环写）；binl
 
 一句话分工：**undo 保原子，redo 保持久，binlog 保复制与恢复，两阶段提交保这三份东西不打架。**
 
+### binlog 的三种格式（✅ 8.0 默认是 ROW，官方原话）
+
+官方 `replication-options-binary-log.html` 写的是："`binlog_format` Default Value **ROW**"，并且"In MySQL 8.0, binary logging is enabled by default, and by default uses the row-based format."。三种要按"日志里记的是什么"来理解：
+
+| 格式 | 记什么 | 好在哪 | 坏在哪 |
+|---|---|---|---|
+| `statement` | **原始 SQL 语句** | 日志最小（一条 UPDATE 就一行字）；能直接 `mysqlbinlog` 拿出来看懂、能审计 | **不确定语句会让主从跑出不同结果**：`NOW()`/`RAND()`/`UUID()`、没有 `ORDER BY` 的 `LIMIT` 更新、用户自定义函数、触发器的执行顺序。官方在 RC 那一节也提过：并发下 `UPDATE ... WHERE ... LIMIT n` 这种语句，如果两边锁的行不同，结果就不一致 |
+| `row` | **每一行改前 / 改后的值** | **确定**：不管什么函数、什么执行顺序，重放的结果一定一样；也才能做"只重放某张表/某个库"这类精细恢复 | 日志量大得多：改 100 万行就是 100 万条 row event；**从日志里看不到原始 SQL**（官方明确列了这一条缺点）；对 BLOB/大字段表尤其致命 |
+| `mixed` | 默认走 statement，MySQL **认为**不确定时自动切 row | 体积与安全折中 | 关键风险在"**认为**"两个字：哪些语句算不确定是版本相关的判定逻辑，**它不是保证**。把正确性押在自动切换上，等于押在一个你没验证过的启发式上 |
+
+两条跟其他讲义连起来的实用结论：
+
+1. **`binlog_row_image` 默认是 `full`**（✅ 已在官方页核到）。意思是哪怕你只改一个列，row 日志里也记**整行的改前改后镜像**。所以宽表 + 频繁更新 = binlog 膨胀的主因之一；可选 `minimal` 只记真正变化的列（**开启条件和限制我没核，进清单**）。这条也直接解释"为什么垂直拆大字段能减小日志"（讲义 07 第六节）。
+2. **`Canal` / 延迟双删那类"订阅 binlog 做缓存失效"的方案，只能在 row 格式上工作**（讲义 05 第六节第 4 行）：statement 里你拿不到"具体哪几行变了"，也就没法精确删缓存。你以后要写"改库后异步失效缓存"，选型时就顺手记住这条。
+
 ## 十、什么情况下会坏
 
 1. **长事务**。它一直持有那张旧 ReadView，undo 版本链就一直是长的、清理不掉；它还占着锁；它还会通过 **MDL 元数据锁**把你后面一个本来很快的 `ALTER TABLE` 堵死，而所有新查询又排在 ALTER 后面——一个忘了 commit 的终端能引发整站不可用。这是真实事故里最常见的一种。查它：`SELECT * FROM information_schema.INNODB_TRX ORDER BY trx_started;`（自己核这个视图的列名）。
@@ -196,11 +211,29 @@ redo 是 InnoDB 引擎内部的物理日志（内容固定、循环写）；binl
 
 ## 十三、核对清单
 
-去官方文档或自己机器上确认，别信我：
+**✅ 已核 —— MySQL 8.0 官方 Reference Manual**（出处：`innodb-transaction-isolation-levels.html`、`replication-options-binary-log.html`）
 
-- [ ] `SELECT @@transaction_isolation;` 看你库里的默认级别，以及怎么在会话级改
-- [ ] ReadView 四条判断的**顺序**和 `trx_id` 的分配规则（书里：第 12 章「trx_id分配规则」「MVCC下不同版本直接比较的结果」；第 14 章「各隔离级别下访问表时寻找用户要的记录的过程」）
-- [ ] `innodb_lock_wait_timeout`、`innodb_flush_log_at_trx_commit`、`sync_binlog`、`innodb_deadlock_detect` 这几个参数的**默认值**——把官方文档那页打开对照，别背论坛里的数
-- [ ] binlog 三种格式（statement / row / mixed）各自的问题，以及"RC 下为什么必须用 row"
-- [ ] PG 侧三处对比：**默认隔离级别 / RC 是语句级快照而 RR 是事务级快照 / VACUUM 与长事务**
-- [ ] **两阶段提交崩溃恢复时"以哪份日志为准"的完整规则（四种组合分别怎么处理）——这块我讲得太粗，不敢确定自己没记错，你必须自己查文档补全。**
+- [ ] InnoDB 默认隔离级别是 **REPEATABLE READ**（官方原话 "The default isolation level for InnoDB is REPEATABLE READ"）。你机器上再确认一遍：`SELECT @@transaction_isolation;`
+- [ ] RC 下**不加间隙锁**："InnoDB locks only index records, not the gaps before them, and thus permits the free insertion of new records next to locked records"，并且"Because gap locking is disabled, phantom row problems may occur"
+- [ ] RR 下用 gap / next-key lock 挡插入："locks the index range scanned, using gap locks or next-key locks to block insertions by other sessions into the gaps"
+- [ ] **RC 只能配 row 格式 binlog**："Only row-based binary logging is supported with the READ COMMITTED isolation level"（配 MIXED 时服务器自动切 row）
+- [ ] `binlog_format` 8.0 默认 **ROW**；`binlog_row_image` 默认 **full**；`binlog_cache_size` 默认 **32768**；`binlog_group_commit_sync_delay` 默认 **0**
+- [ ] 书里的位置（按你发的目录，已对上）：`trx_id` 分配规则 = 第 12 章「trx_id分配规则」；可见性比较 = 第 12 章「MVCC下不同版本直接比较的结果」；各隔离级别怎么找记录 = 第 14 章「各隔离级别下访问表时寻找用户要的记录的过程」；redo = 第 10 章、undo = 第 11 章；事务开始与结束 / 两阶段提交 = 第 13 章「一条更新语句要怎么执行（事务开始和结束过程）」
+
+**✅ 已核 —— PostgreSQL 官方文档**（第十一节⑤那三条对比，出处：`transaction-iso.html`、`routine-vacuuming.html`）
+
+- [ ] **"Read Committed is the default isolation level in PostgreSQL"** —— 不是"快照隔离"，别说错
+- [ ] PG 的 RC 是**语句级快照**："a `SELECT` query sees a snapshot of the database as of the instant the query begins to run"，所以同一事务里两条 SELECT 可能看到不同数据；PG 的 RR 才是**事务级快照**（"as of the start of the first non-transaction-control statement in the transaction"）
+- [ ] PG 的 RR 遇到并发更新**不阻塞、直接报错回滚**："ERROR: could not serialize access due to concurrent update"，官方要求应用**从头重试整个事务**
+- [ ] PG 更新不原地覆盖："an `UPDATE` or `DELETE` of a row does not immediately remove the old version of the row"；死元组要靠 `VACUUM` 回收，**长事务会挡住回收导致表和索引膨胀**；官方给的排查方法是查 `pg_stat_activity` 里 `age(backend_xmin)` / `age(backend_xid)` 偏大的会话，必要时 `pg_terminate_backend`
+
+**⚠️ 留空 —— 我没核实，别背我这里的数**
+
+- [ ] InnoDB 默认页大小到底怎么查（`SHOW GLOBAL STATUS LIKE 'Innodb_page_size'` 还是 `SHOW VARIABLES LIKE 'innodb_page_size'`，你实测哪个能用）
+- [ ] 一个非叶节点分叉数的估算（我按 8B 主键 + 6B 指针算的，你的表未必是这个结构）
+- [ ] `type` 各取值的完整排序和含义；MySQL 8.0 的 `Backward index scan`（讲义 01 留的那条）
+- [ ] `innodb_lock_wait_timeout`（网上流传 50 秒）、`innodb_flush_log_at_trx_commit`、`sync_binlog`、`innodb_deadlock_detect`、`innodb_print_all_deadlocks` 的默认值 —— 一行实测最直接：`SHOW VARIABLES WHERE Variable_name IN ('innodb_lock_wait_timeout','innodb_flush_log_at_trx_commit','sync_binlog','innodb_deadlock_detect','innodb_print_all_deadlocks');`
+- [ ] **两阶段提交崩溃恢复时"以哪份日志为准"的完整规则**（四种组合分别怎么处理）—— 第九节我写得偏粗，读完官方那节之前别在面试里展开
+- [ ] MVCC 遍历版本链时"多个列可能取自不同历史版本"这条（丁奇第 14 章的结论，我没核到原文）
+- [ ] `binlog_row_image=minimal` 的开启条件与限制
+- [ ] binlog 自动清理：`binlog_expire_logs_seconds` 的默认值（我印象 30 天，**没核实**）以及老参数 `expire_logs_days` 的废弃状态
