@@ -18,6 +18,7 @@ English | [简体中文](./README.md)
 - 📐 **Bento Grid Layout** — Flexible multi-column grid that adapts to different content types
 - 🌸 **Sakura Falling Animation** — 60 DOM particles driven by CSS keyframes (not Canvas), seeded so server and client render identically
 - 🎵 **Music Player** — Built-in player component with track switching
+- 📝 **Articles Are Plain Markdown** — `src/content/notes/*.md` with frontmatter, rendered into static pages at build time; `- [ ]` in the body becomes a checkbox whose state can sync across your devices
 - 💡 **3D Tilt Interaction** — Mouse-following card tilt and spotlight effect
 - 🎬 **Entry Animations** — Staggered fade-in animations powered by Framer Motion
 - 🌗 **Light / Dark Theme** — `useSyncExternalStore` over localStorage, no flash of the wrong theme
@@ -110,8 +111,8 @@ public/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Rewmington/Rewmington-Desk.git
-cd Rewmington-Desk
+git clone https://github.com/Rewmington/Rewmington-Blog.git
+cd Rewmington-Blog
 
 # Install dependencies
 npm install
@@ -138,6 +139,25 @@ pushes, and Actions takes it live once the build finishes.
   server-side and no file is written
 - Binds 127.0.0.1 only — no network exposure, no tokens
 - Editing `content/*.json` directly in GitHub's web UI still works from anywhere else
+
+**Articles are not written there.** The local desk only handles the four JSON collections and the
+profile. Articles live in `src/content/notes/` as `.md`, and the file name is the URL
+(`lecture-01-mysql-index.md` → `/articles/lecture-01-mysql-index/`):
+
+```md
+---
+title: Title
+description: One-line summary shown on the list page
+date: "2026-10-10"
+kind: 笔记            # The label shown top-left on the card
+tags: [tag1, tag2]
+order: 10             # Higher sorts first: 打卡 30 / 路线 20 / 讲义 10
+---
+```
+
+`- [ ] item` renders as a tickable checkbox and `##`/`###` headings build the table of contents.
+Emptying `notes/` still builds — the list page shows its empty state, and `articles/[slug]` keeps a
+placeholder parameter to work around a static-export limitation.
 
 ### Online admin (`/admin`, zero credentials)
 
@@ -167,7 +187,7 @@ Two known edges:
   deliberately kept in the same shape. Add a field and you touch both. The real hard validation is
   at build time in `src/lib/constants.ts`, so a missed edit only costs you one input, not bad data
 
-### Two behaviours worth knowing
+### Three behaviours worth knowing
 
 **The content JSON is public.** The build snapshots `src/content/*.json` into `out/content/`, so
 `https://wmddd.online/content/*.json` is readable by anyone. That is what makes `/admin` work, and
@@ -176,6 +196,13 @@ also why it is safe: read-only, with no write capability. Never put anything pri
 **Mobile notes.** Both the particle background and the transfer meter are breakpoint-gated: the
 background is `hidden md:block` (absent below 768px to save CPU/GPU), and the transfer meter turns
 into a full-width bottom sheet on small screens.
+
+**The checkbox token only ever lives in your browser.** Cross-device sync for article checkboxes
+calls `api.github.com` directly (it ships CORS headers) and stores the data in a secret gist of your
+own, merged per checkbox — each one carries its own timestamp, newest wins. The token sits in
+localStorage on each device and never enters the build output, so visitors to the site can neither
+read it (a secret gist 404s for anonymous requests) nor write with it. That holds only while the
+site stays free of third-party scripts — any external JS could read it out of localStorage.
 
 ### Build & Deploy
 
@@ -201,8 +228,17 @@ Pushing to the `main` branch triggers GitHub Actions to automatically build and 
 The project uses GitHub Actions for automated deployment to GitHub Pages:
 
 1. Push code to the `main` branch
-2. GitHub Actions runs `npm ci` → `npm run build` automatically
+2. GitHub Actions runs `npm ci` → `npm run build` automatically (the first build step refreshes your public repo list)
 3. Build artifacts are uploaded and deployed to GitHub Pages
+
+Besides pushes there is also a **scheduled rebuild every day at 20:20 UTC (04:20 Beijing time)**, so
+pushing to any other repository needs no action here — a new repo shows up in the Projects list on
+the next build (by the following morning at the latest). Which is also what "new repos appear
+automatically" means on that page: the next build, not the instant you push.
+
+A failed build never overwrites the live site: Pages only deploys successfully uploaded artifacts, so
+the site stays on the last good build. Fix red runs quickly — it will not warn you, it just quietly
+stops updating.
 
 See [.github/workflows/deploy.yml](./.github/workflows/deploy.yml) for details.
 

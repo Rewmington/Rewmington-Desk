@@ -18,6 +18,7 @@
 - 📐 **Bento Grid 布局** — 灵活的多栏网格，适配不同内容类型
 - 🌸 **樱花飘落动画** — 60 片 DOM 粒子配 CSS keyframes（不是 Canvas），种子固定所以服务端与客户端渲染一致
 - 🎵 **音乐播放器** — 内置播放器组件，支持曲目切换
+- 📝 **文章就是 Markdown** — `src/content/notes/*.md` 带 frontmatter，构建期渲染成静态页；正文里的 `- [ ]` 变成可勾选方框，勾选结果能跨设备同步
 - 💡 **3D 倾斜交互** — 鼠标跟随的卡片倾斜与聚光灯效果
 - 🎬 **入场动画** — 基于 Framer Motion 的交错渐入动画
 - 🌗 **明暗主题切换** — `useSyncExternalStore` 读 localStorage，无刷新闪烁
@@ -110,8 +111,8 @@ public/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Rewmington/Rewmington-Desk.git
-cd Rewmington-Desk
+git clone https://github.com/Rewmington/Rewmington-Blog.git
+cd Rewmington-Blog
 
 # 安装依赖
 npm install
@@ -135,6 +136,23 @@ npm run studio
 - 字段写错（比如状态不在四个候选里）会被服务端拒绝，一个文件都不写
 - 只监听 127.0.0.1，不联网、不需要任何 token
 - 从手机等别处改内容时，仍然可以直接在 GitHub 网页上编辑这些 JSON
+
+**文章不在这里写。** 发布台只管四份 JSON 表单和 profile；文章的真源是 `src/content/notes/` 下的
+`.md`，文件名就是地址（`lecture-01-mysql-index.md` → `/articles/lecture-01-mysql-index/`）：
+
+```md
+---
+title: 标题
+description: 一句话摘要，列表页显示
+date: "2026-10-10"
+kind: 笔记            # 列表页左上角那个标签
+tags: [标签1, 标签2]
+order: 10             # 大的排前面：打卡 30 / 路线 20 / 讲义 10
+---
+```
+
+`- [ ] 条目` 会渲染成可勾选方框，`##`/`###` 自动进右侧目录。把 `notes/` 整个清空也能构建 ——
+列表页显示空状态，`articles/[slug]` 那边留了一个占位参数绕开静态导出的限制。
 
 ### 在线后台（`/admin`，零凭据）
 
@@ -161,7 +179,7 @@ npm run studio
   有意保持同形。加字段时两处都要改；真正的硬校验在构建期 `src/lib/constants.ts`，漏改只会
   让表单少一个输入框，不会写坏数据
 
-### 值得知道的两个行为
+### 值得知道的三个行为
 
 **内容 JSON 是公开的。** 构建会把 `src/content/*.json` 原样快照到 `out/content/`，所以
 `https://wmddd.online/content/*.json` 任何人都能读到。这是 `/admin` 能工作的前提，也是它安全的原因
@@ -169,6 +187,11 @@ npm run studio
 
 **移动端注意。** 樱花粒子背景和传输量计都受断点控制：粒子背景 `hidden md:block`（<768px 不显示，
 省 CPU/GPU），传输量计在移动端改为贴底的满宽抽屉。
+
+**打卡 token 只在你自己的浏览器里。** 文章方框的跨设备同步直接打 `api.github.com`（它自带 CORS），
+数据写进你自己的一个 secret gist，合并粒度是单个方框（每条记自己的改动时间戳，谁新用谁的）。
+token 存在每台设备的 localStorage、不进构建产物，所以别人打开网站既读不到（secret gist 匿名读 404）
+也写不了。前提是站点继续保持零第三方脚本 —— 一旦引入外部 JS，它就能把 token 读走。
 
 ### 构建与部署
 
@@ -194,8 +217,15 @@ npm run build
 项目使用 GitHub Actions 自动部署到 GitHub Pages：
 
 1. 推送代码到 `main` 分支
-2. GitHub Actions 自动执行 `npm ci` → `npm run build`
+2. GitHub Actions 自动执行 `npm ci` → `npm run build`（构建第一步会顺手抓一次你的公开仓库清单）
 3. 构建产物上传并部署到 GitHub Pages
+
+除了 push，还有**每天 UTC 20:20（北京时间凌晨 04:20）的一次定时重建**，所以往别的仓库推代码
+不用动这里 —— 新仓库会在下一次构建（最晚第二天凌晨）自动出现在项目栏。反过来说，项目栏那句
+"新仓库自动出现"指的也是这个时机，不是 push 完立刻可见。
+
+构建失败不会覆盖线上：Pages 只部署成功上传的产物，所以站点会停在最后一次成功构建上。红了要尽快修，
+因为它不会报错给你看，只会安静地不更新。
 
 详见 [.github/workflows/deploy.yml](./.github/workflows/deploy.yml)。
 
