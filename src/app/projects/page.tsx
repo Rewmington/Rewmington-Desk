@@ -29,7 +29,7 @@ export default function ProjectsPage() {
             </h1>
             <p className="text-[var(--text-secondary)] text-sm md:text-base">
               我的开源项目与作品。清单是构建时从 GitHub 上的公开仓库取的，
-              新仓库 push 之后自动出现在这里。
+              新仓库要等下一次构建才会出现在这里（推 main 立刻触发，另有每天一次的定时重建）。
             </p>
           </div>
         </StaggerItem>
