@@ -5,7 +5,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/AnimatedEntry";
-import siteConfig from "../../../siteConfig";
+import siteConfig from "@/siteConfig";
 
 export default function AboutPage() {
   return (

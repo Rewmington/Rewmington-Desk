@@ -1,6 +1,6 @@
 "use client";
 
-import siteConfig from "../../siteConfig";
+import siteConfig from "@/siteConfig";
 import { photos } from "@/lib/constants";
 
 export default function ProfileCard({ noteCount }: { noteCount: number }) {

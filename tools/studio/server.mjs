@@ -166,7 +166,7 @@ const server = createServer(async (req, res) => {
       try {
         const { stdout } = await run(
           "git",
-          ["status", "--porcelain", "--", "src/content", "public/images", "siteConfig.ts"],
+          ["status", "--porcelain", "--", "src/content", "public/images", "src/siteConfig.ts"],
           { cwd: ROOT }
         );
         changed = stdout.split("\n").filter((l) => l.trim()).map((l) => l.slice(3).replace(/^.*-> /, "").replace(/^"|"$/g, ""));
@@ -184,7 +184,7 @@ const server = createServer(async (req, res) => {
       const body = JSON.parse((await collectBody(req)).toString("utf8"));
       const message = (body.message || "").trim() || "content: 更新站点内容";
       const steps = [];
-      steps.push(await gitOut(["add", "src/content", "public/images"]));
+      steps.push(await gitOut(["add", "src/content", "src/siteConfig.ts", "public/images"]));
       const status = await gitOut(["diff", "--cached", "--name-only"]);
       if (!status) return send(res, 200, { ok: true, steps: ["没有需要提交的改动"] });
       steps.push(await gitOut(["commit", "-m", message]));
