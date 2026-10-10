@@ -1,14 +1,14 @@
 {
-  "fetchedAt": "2026-10-07T10:10:19.713Z",
+  "fetchedAt": "2026-10-10T12:16:52.727Z",
   "repos": [
     {
       "name": "Rewmington-Blog",
       "description": "个人工作台",
-      "url": "https://github.com/Rewmington/Rewmington-Desk",
+      "url": "https://github.com/Rewmington/Rewmington-Blog",
       "language": "TypeScript",
       "topics": [],
       "stars": 0,
-      "pushedAt": "2026-10-07T09:59:31Z",
+      "pushedAt": "2026-10-10T11:35:41Z",
       "archived": false
     },
     {
@@ -18,7 +18,7 @@
       "language": "Dart",
       "topics": [],
       "stars": 0,
-      "pushedAt": "2026-10-03T09:27:05Z",
+      "pushedAt": "2026-10-07T16:36:15Z",
       "archived": false
     },
     {

@@ -31,7 +31,7 @@ type Repo = {
   archived: boolean;
 };
 
-/** 覆盖表和仓库靠 url 末段的仓库名对上，比如 .../Rewmington-Desk ↔ Rewmington-Desk */
+/** 覆盖表和仓库靠 url 末段的仓库名对上，比如 .../Rewmington-Blog ↔ Rewmington-Blog */
 function repoKey(url: string) {
   return String(url).split("/").filter(Boolean).pop()?.toLowerCase() ?? "";
 }
