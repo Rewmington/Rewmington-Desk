@@ -33,5 +33,6 @@ export async function notesMeta(root) {
     })
   );
 
-  return items.sort((a, b) => b.order - a.order || (a.date < b.date ? 1 : -1));
+  // 必须和 src/lib/notes.ts 的 listNotes() 排序一致：order 大的在前，同组内按 slug 正序（讲义编号即阅读顺序）
+  return items.sort((a, b) => b.order - a.order || a.slug.localeCompare(b.slug, "en", { numeric: true }));
 }

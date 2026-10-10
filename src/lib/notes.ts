@@ -176,7 +176,10 @@ export function listNotes(): NoteMeta[] {
       const parsed = matter(raw);
       return toMeta(f.replace(/\.md$/, ""), parsed.data, raw);
     })
-    .sort((a, b) => b.order - a.order || (a.date < b.date ? 1 : -1));
+    // order 大的排前面，那是"种类"：打卡 → 路线 → 讲义。
+    // 同一组里按 slug 正序，因为讲义的编号就是阅读顺序（01 在前、07 在后），
+    // numeric 让将来的 lecture-10 仍排在 lecture-09 后面而不是夹在中间。
+    .sort((a, b) => b.order - a.order || a.slug.localeCompare(b.slug, "en", { numeric: true }));
 }
 
 export function getNote(slug: string): Note | null {
