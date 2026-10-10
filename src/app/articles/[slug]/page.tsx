@@ -4,8 +4,20 @@ import type { Metadata } from "next";
 import { getNote, listNotes, neighbors } from "@/lib/notes";
 import ArticleReader from "@/components/ArticleReader";
 
+/**
+ * notes/*.md 清空时也必须返回至少一个参数：`output: "export"` 见到空数组会判定这个路由
+ * 没用 generateStaticParams，直接构建失败 —— 而构建失败等于线上悄悄停在旧版本。
+ * 这个占位 slug 不对应任何文件，渲染时走 notFound()，也不会有链接指向它。
+ */
+const EMPTY_PLACEHOLDER = "__no-notes__";
+
+export const dynamicParams = false;
+
 export function generateStaticParams() {
-  return listNotes().map((n) => ({ slug: n.slug }));
+  const notes = listNotes();
+  return notes.length
+    ? notes.map((n) => ({ slug: n.slug }))
+    : [{ slug: EMPTY_PLACEHOLDER }];
 }
 
 type Props = { params: Promise<{ slug: string }> };
