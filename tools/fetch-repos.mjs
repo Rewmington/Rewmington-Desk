@@ -25,7 +25,7 @@ let payload = old;
 
 try {
   const res = await fetch(API, {
-    headers: { "user-agent": "Rewmington-Desk build", accept: "application/vnd.github+json" },
+    headers: { "user-agent": "Rewmington-Blog build", accept: "application/vnd.github+json" },
     signal: AbortSignal.timeout(25_000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
